@@ -1,0 +1,53 @@
+{
+  "doc": {
+    "book_no": "01",
+    "number": "000128",
+    "sequence_no": "7",
+    "form_type": "pnd53",
+    "issued_date": "02/01/2026"
+  },
+  "withholder": {
+    "name": "",
+    "tax_id": "",
+    "address": ""
+  },
+  "payee": {
+    "name": "",
+    "tax_id": "",
+    "address": ""
+  },
+  "income_rows": [
+    {
+      "label": "5. การจ่ายเงินได้ที่ต้องหักภาษี ณ ที่จ่ายตามคำสั่งกรมสรรพากรที่ออกตามมาตรา 3 เตรส เช่น รางวัล ส่วนลดหรือประโยชน์ใด ๆ เนื่องจากการส่งเสริมการขาย รางวัลในการประกวด การแข่งขัน การชิงโชค ค่าแสดงของนักแสดงสาธารณะ ค่าจ้างทำของ ค่าโฆษณา ค่าเช่า ค่าขนส่ง ค่าบริการ ค่าเบี้ยประกันวินาศภัย ฯลฯ",
+      "date": "31/12/2025",
+      "paid_amount": 100000,
+      "withheld_tax": 3000
+    },
+    {
+      "label": "6. อื่นๆ ระบุ",
+      "other_text": "",
+      "date": "31/12/2025",
+      "paid_amount": 50000,
+      "withheld_tax": 1500
+    }
+  ],
+  "summary": {
+    "total_paid": 150000,
+    "total_withheld": 4500,
+    "total_withheld_text": "สี่พันห้าร้อยบาทถ้วน"
+  },
+  "contrib": {
+    "teacher_fund_amount": "",
+    "social_security_amount": "",
+    "provident_fund_amount": ""
+  },
+  "payment": {
+    "mode": "withholding",
+    "other_text": ""
+  },
+  "signer": {
+    "name": "",
+    "date": "02/01/2026"
+  },
+  "stamp_text": "ประทับตรานิติบุคคล<br>(ถ้ามี)"
+}

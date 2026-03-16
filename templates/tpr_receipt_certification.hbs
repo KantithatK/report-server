@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+  <meta charset="utf-8" />
+  <title>ใบรับรองแทนใบเสร็จรับเงิน{{#if doc.number}} {{doc.number}}{{/if}}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Sarabun", sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      padding: 20px;
+      color: #000;
+    }
+
+    .page {
+      width: 210mm;
+      margin: auto;
+      padding: 10mm;
+    }
+
+    /* Header Section */
+    .header-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .top-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 5px;
+    }
+
+    .company-info {
+      font-size: 13px;
+    }
+
+    .company-name {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .logo-box img {
+      width: 90px;
+      height: auto;
+    }
+
+    /* ตารางรายการ */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+
+    th,
+    td {
+      border: 1px solid #000;
+      padding: 4px 8px;
+    }
+
+    th {
+      background: #f2f2f2;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .col-date {
+      width: 15%;
+    }
+
+    .col-desc {
+      width: 50%;
+    }
+
+    .col-amount {
+      width: 20%;
+      text-align: right;
+    }
+
+    .col-note {
+      width: 15%;
+    }
+
+    .row-empty {
+      height: 25px;
+    }
+
+    /* Footer ตาราง */
+    .summary-row td {
+      font-weight: bold;
+    }
+
+    .amount-text {
+      text-align: center;
+      background: #f9f9f9;
+    }
+
+    /* ข้อความรับรองด้านล่าง */
+    .certification-text {
+      margin-top: 20px;
+      line-height: 2;
+      clear: both;
+    }
+
+    .dotted-line {
+      border-bottom: 1px dotted #000;
+      display: inline-block;
+      min-width: 150px;
+      text-align: center;
+      padding: 0 5px;
+    }
+
+    /* ส่วนลายเซ็น */
+    .signature-section {
+      margin-top: 40px;
+      float: right;
+      width: 50%;
+    }
+
+    .sig-row {
+      display: flex;
+      align-items: flex-end;
+      margin-bottom: 30px;
+    }
+
+    .sig-label {
+      width: 50px;
+    }
+
+    .sig-line {
+      flex-grow: 1;
+      border-bottom: 1px dotted #000;
+      margin: 0 10px;
+      text-align: center;
+    }
+
+    @media print {
+      .page {
+        border: none;
+        padding: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="header-title">ใบรับรองแทนใบเสร็จรับเงิน</div>
+
+    <div class="top-container">
+      <div class="company-info">
+        <div class="company-name">{{company.name}}</div>
+        <div>{{company.address}}</div>
+        <div>โทร. {{company.phone}}</div>
+        <div>อีเมล: {{company.email}}</div>
+      </div>
+      <div class="logo-box">
+        {{#if company.logo_url}}
+        <img src="{{company.logo_url}}" alt="Logo">
+        {{else}}
+        <img src="https://via.placeholder.com/90x80?text=LOGO" alt="Logo">
+        {{/if}}
+      </div>
+    </div>
+
+    <hr style="border: 1px solid #000; margin-bottom: 15px;">
+
+    <table>
+      <thead>
+        <tr>
+          <th class="col-date">วัน เดือน ปี</th>
+          <th class="col-desc">รายละเอียดรายจ่าย</th>
+          <th class="col-amount">จำนวนเงิน</th>
+          <th class="col-note">หมายเหตุ</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if items.length}}
+          {{#each items}}
+          <tr>
+            <td style="text-align:center;">{{safeText date ""}}</td>
+            <td>{{safeText description ""}}</td>
+            <td class="col-amount">{{#if amount}}{{money amount}}{{else}}{{/if}}</td>
+            <td>{{safeText note ""}}</td>
+          </tr>
+          {{/each}}
+        {{else}}
+          <tr class="row-empty"><td></td><td></td><td></td><td></td></tr>
+        {{/if}}
+
+        {{#each empty_rows}}
+          <tr class="row-empty"><td></td><td></td><td></td><td></td></tr>
+        {{/each}}
+
+        <tr class="summary-row">
+          <td colspan="2" class="amount-text">{{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}}</td>
+          <td style="text-align:center; background:#f2f2f2;">รวมทั้งสิ้น</td>
+          <td class="col-amount" style="border-left:none;">{{#if summary.total}}{{money summary.total}}{{else}}-{{/if}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="certification-text">
+      ข้าพเจ้า <span class="dotted-line">{{safeText certification.payer_name ""}}</span> (ผู้เบิกจ่าย)
+      &nbsp;&nbsp; ตำแหน่ง <span class="dotted-line">{{safeText certification.payer_position ""}}</span> <br>
+      ขอรับรองว่า รายจ่ายข้างต้นนี้ไม่อาจเรียกเก็บใบเสร็จรับเงินจากผู้รับได้ และข้าพเจ้าได้จ่ายไปในงานของทาง <br>
+      {{company.name}} โดยแท้ ตั้งแต่วันที่ <span class="dotted-line">{{safeText certification.from_date ""}}</span>
+      &nbsp;&nbsp; ถึงวันที่ <span class="dotted-line">{{safeText certification.to_date ""}}</span>
+    </div>
+
+    <div class="signature-section">
+      <div class="sig-row">
+        <span class="sig-label">ลงชื่อ</span>
+        <div class="sig-line"></div>
+        <span>(ผู้เบิกจ่าย)</span>
+      </div>
+      <div class="sig-row">
+        <span class="sig-label">ลงชื่อ</span>
+        <div class="sig-line"></div>
+        <span>(ผู้อนุมัติ)</span>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

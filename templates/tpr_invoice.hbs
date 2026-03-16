@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Invoice / Billing {{doc.number}}</title>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { padding: 0; margin: 0; }
+    body {
+      font-family: "TH Sarabun New", "Sarabun", "Tahoma", Arial, sans-serif;
+      color: #111;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+    .page { width: 100%; }
+
+    /* ===== Header (เหมือนใบลดหนี้) ===== */
+    .topbar {
+      display: grid;
+      grid-template-columns: 120px 1fr 110px;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 6px;
+    }
+    .logo-box {
+      width: 110px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo-img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .logo-text { font-size: 18px; }
+
+    .company-block { padding-top: 2px; }
+    .company-name { font-weight: 700; font-size: 18px; }
+    .company-sub { font-size: 12px; margin-top: 2px; }
+
+    .original-tag {
+      justify-self: end;
+      font-weight: 700;
+      font-size: 16px;
+      margin-top: 4px;
+    }
+
+    .doc-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+      margin: 8px 0 10px;
+    }
+
+    /* ===== SoldTo + Meta ===== */
+    .info-row {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 6px;
+    }
+    .k { font-weight: 700; white-space: nowrap; }
+    .addr {
+      margin: 4px 0 6px 96px; /* = 90 + gap 6 */
+      font-size: inherit;
+      white-space: pre-line;
+    }
+    .taxline { margin-top: 4px; }
+
+    .docmeta {
+      justify-self: end;
+      width: 260px;
+      font-size: inherit;
+    }
+    .docmeta .kv { grid-template-columns: 120px 1fr; }
+    .docmeta .k { white-space: nowrap; }
+    .docmeta .v { text-align: right; }
+
+    /* ===== Table base ===== */
+    table { border-collapse: collapse; width: 100%; }
+    .qtable {
+      border: 1px solid #333;
+      table-layout: fixed;
+      width: 100%;
+    }
+    .qtable th, .qtable td {
+      border: 1px solid #333;
+      padding: 8px 8px;
+      vertical-align: top;
+    }
+    .qtable thead th {
+      text-align: center;
+      font-weight: 800;
+      background: #f3f3f3;
+    }
+    .col-no { width: 60px; }
+    .col-desc { width: auto; }
+    .col-qty { width: 120px; }
+    .col-unitprice { width: 120px; }
+    .col-amount { width: 120px; }
+
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .desc-strong { font-weight: 700; }
+
+    /* ===== Summary ===== */
+    .qtable-summary { margin-top: 0; border-top: none; }
+    .qtable-summary td { padding: 7px 8px; }
+
+    .note-cell {
+      font-size: 12px;
+      white-space: pre-line;
+      vertical-align: top;
+    }
+    .note-title { font-weight: 800; margin-bottom: 4px; }
+    .note-text { white-space: pre-line; }
+
+    .sum-label { background: #fafafa; }
+    .sum-value { background: #fff; }
+
+    .amount-words {
+      text-align: center;
+      font-weight: 800;
+      padding: 9px 8px !important;
+      background: #e9e9e9;
+    }
+
+    /* ===== Signatures (3 columns) ===== */
+    .sign-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 40px;
+      margin-top: 38px;
+      align-items: end;
+      page-break-inside: avoid;
+    }
+    .sign-col { text-align: center; }
+    .sign-label { font-size: 12px; margin-bottom: 6px; }
+    .sign-line { border-bottom: 1px solid #333; height: 22px; }
+    .sign-date { font-size: 12px; margin-top: 20px; }
+    .sign-date .dots {
+      border-bottom: 1px dotted #333;
+      display: inline-block;
+      width: 160px;
+      transform: translateY(-2px);
+    }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <!-- Header -->
+    <div class="topbar">
+      <div class="logo-box">
+        {{#if company.logo_url}}
+          <img class="logo-img" src="{{company.logo_url}}" alt="logo" />
+        {{else}}
+          <div class="logo-text">โลโก้</div>
+        {{/if}}
+      </div>
+
+      <div class="company-block">
+        <div class="company-name">{{company.name}} (สำนักงานใหญ่)</div>
+        <div class="company-sub">{{company.address}}</div>
+        <div class="company-sub">เลขประจำตัวผู้เสียภาษี {{company.tax_id}}</div>
+        <div class="company-sub">Tel: {{company.phone}} ต่อ 101,104 E-mail : {{company.email}}</div>
+      </div>
+
+      <div class="original-tag">สำหรับลูกค้า<br />(ไม่ใช่ใบกำกับภาษี)</div>
+    </div>
+
+    <div class="doc-title">ใบแจ้งหนี้ / ใบวางบิล</div>
+
+    <!-- SoldTo + Doc Meta -->
+    <div class="info-row">
+      <div class="soldto">
+        <div class="kv">
+          <span class="k">ลูกค้า:</span>
+          <span class="v"><strong>{{customer.name}}</strong></span>
+        </div>
+        <div class="addr">{{customer.address}}</div>
+
+        <div class="kv taxline">
+          <span class="k">เลขประจำตัวผู้เสียภาษี:</span>
+          <span class="v">{{customer.tax_id}}</span>
+        </div>
+      </div>
+
+      <div class="docmeta">
+        <div class="kv"><span class="k">เลขที่เอกสาร</span><span class="v">{{doc.number}}</span></div>
+        <div class="kv"><span class="k">วันที่เอกสาร</span><span class="v">{{doc.date}}</span></div>
+
+        <!-- ✅ เปลี่ยนจากอ้างอิงใบกำกับภาษี -> อ้างอิงใบเสนอราคา / PO -->
+        <div class="kv">
+          <span class="k">อ้างอิงใบเสนอราคา</span>
+          <span class="v">{{#if ref.quotation_no}}{{ref.quotation_no}}{{else}}-{{/if}}</span>
+        </div>
+        <div class="kv">
+          <span class="k">วันที่อ้างอิงเอกสาร</span>
+          <span class="v">{{#if ref.po_no}}{{ref.po_no}}{{else}}-{{/if}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <table class="qtable">
+      <colgroup>
+        <col class="col-no" />
+        <col class="col-desc" />
+        <col class="col-qty" />
+        <col class="col-unitprice" />
+        <col class="col-amount" />
+      </colgroup>
+
+      <thead>
+        <tr>
+          <th class="col-no">ลำดับ</th>
+          <th class="col-desc">รายการ</th>
+          <th class="col-qty">จำนวน</th>
+          <th class="col-unitprice">หน่วยละ</th>
+          <th class="col-amount">จำนวนเงิน</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {{#each items}}
+          <tr class="item-row">
+            <td class="center">{{no}}</td>
+            <td><div class="desc-strong">{{name}}</div></td>
+            <td class="center">{{qty}} {{unit}}</td>
+            <td class="right">{{money price}}</td>
+            <td class="right">{{money line_total}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <!-- Summary + Note -->
+    <table class="qtable qtable-summary">
+      <colgroup>
+        <col class="col-no" />
+        <col class="col-desc" />
+        <col class="col-qty" />
+        <col class="col-unitprice" />
+        <col class="col-amount" />
+      </colgroup>
+
+      <tbody>
+        <tr>
+          <!-- ✅ เปลี่ยนเป็น “หมายเหตุ” และใส่ข้อความ 2 ข้อ ตาม requirement -->
+          <td class="note-cell" colspan="3" rowspan="5">
+            <div class="note-title">หมายเหตุ :</div>
+            <div class="note-text">
+1) กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม "{{company.name}}" เท่านั้น
+2) บริษัทฯ ขอสงวนสิทธิ์ในการแก้ไขใบกำกับภาษีภายใน 7 วัน นับจากวันที่ระบุในใบกำกับภาษี (ผิด ตก ยกเว้น E. &amp; OE.)
+            </div>
+          </td>
+
+          <!-- ✅ สรุปข้อมูลตามใบแจ้งหนี้ -->
+          <td class="sum-label right">รวมเงิน</td>
+          <td class="sum-value right">{{#if summary.subtotal}}{{money summary.subtotal}}{{else}}-{{/if}}</td>
+        </tr>
+
+        <tr>
+          <td class="sum-label right">ภาษีมูลค่าเพิ่ม 7%</td>
+          <td class="sum-value right">{{#if summary.vat}}{{money summary.vat}}{{else}}-{{/if}}</td>
+        </tr>
+
+        <tr>
+          <td class="sum-label right"><strong>รวมเงินทั้งสิ้น</strong></td>
+          <td class="sum-value right"><strong>{{#if summary.total}}{{money summary.total}}{{else}}-{{/if}}</strong></td>
+        </tr>
+
+        <tr>
+          <td class="sum-label right">หัก ณ ที่จ่าย 3%</td>
+          <td class="sum-value right">
+            {{#if summary.withholding}}-{{money summary.withholding}}{{else}}-{{/if}}
+          </td>
+        </tr>
+
+        <tr>
+          <td class="sum-label right"><strong>จำนวนเงินทั้งสิ้น</strong></td>
+          <td class="sum-value right"><strong>{{#if summary.net_total}}{{money summary.net_total}}{{else}}-{{/if}}</strong></td>
+        </tr>
+
+        <tr>
+          <td class="amount-words" colspan="5">
+            {{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ✅ Signatures ตาม requirement:
+         - ผู้รับสินค้าและวันที่
+         - ผู้ส่งสินค้าและวันที่
+         - ในนาม "(ชื่อบริษัท)" ผู้มีอำนาจลงนาม
+    -->
+    <div class="sign-row">
+      <div class="sign-col">
+        <div class="sign-label">ได้รับสินค้าตามรายการข้างบนเรียบร้อย<br />ผู้รับสินค้า</div>
+        <div class="sign-line"></div>
+        <div class="sign-date">วันที่ <span class="dots"></span></div>
+      </div>
+
+      <div class="sign-col">
+        <div class="sign-label">ผู้ส่งสินค้า</div>
+        <div class="sign-line"></div>
+        <div class="sign-date">วันที่ <span class="dots"></span></div>
+      </div>
+
+      <div class="sign-col">
+        <div class="sign-label">ในนาม "{{company.name}}"<br />ผู้มีอำนาจลงนาม</div>
+        <div class="sign-line"></div>
+        <div class="sign-date">วันที่ <span class="dots"></span></div>
+      </div>
+    </div>
+
+  </div>
+</body>
+
+</html>

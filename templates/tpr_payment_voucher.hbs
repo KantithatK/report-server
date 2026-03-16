@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Payment Voucher {{doc.number}}</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    body {
+      font-family: "TH Sarabun New", "Sarabun", "Tahoma", Arial, sans-serif;
+      color: #111;
+      font-size: 14px;
+      line-height: 1.25;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 21cm;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* ===== Header ===== */
+    .topbar {
+      display: grid;
+      grid-template-columns: 120px 1fr 110px;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 6px;
+    }
+
+    .logo-box {
+      width: 110px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ccc;
+    }
+
+    .logo-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .logo-text {
+      font-size: 18px;
+    }
+
+    .company-block {
+      padding-top: 2px;
+    }
+
+    .company-name {
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .company-sub {
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .original-tag {
+      justify-self: end;
+      font-weight: 700;
+      font-size: 16px;
+      margin-top: 4px;
+      text-align: right;
+      line-height: 1.1;
+    }
+
+    .doc-title {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0 0 10px;
+    }
+
+    .doc-subtitle {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    /* ===== Info Row ===== */
+    .info-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 6px;
+    }
+
+    .k {
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .docmeta {
+      justify-self: end;
+      width: 260px;
+      font-size: inherit;
+    }
+
+    .docmeta .kv {
+      grid-template-columns: 120px 1fr;
+    }
+
+    .docmeta .v {
+      text-align: right;
+    }
+
+    /* ===== Payment Section ===== */
+    .payment-section {
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .pay-methods {
+      margin-top: 6px;
+    }
+
+    .pay-method-row {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin: 4px 0;
+      flex-wrap: wrap;
+    }
+
+    .box {
+      width: 12px;
+      height: 12px;
+      border: 1px solid #111;
+      display: inline-block;
+    }
+
+    .box.checked::after {
+      content: "✓";
+      display: block;
+      text-align: center;
+      line-height: 10px;
+      font-size: 10px;
+    }
+
+    .line {
+      border-bottom: 1px dotted #333;
+      display: inline-block;
+      min-width: 120px;
+      transform: translateY(-2px);
+      padding: 0 3px;
+    }
+
+    .line.sm {
+      min-width: 80px;
+    }
+
+    .line.xs {
+      min-width: 60px;
+    }
+
+    /* ===== Table ===== */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    .qtable {
+      border: 1px solid #333;
+      table-layout: fixed;
+      width: 100%;
+    }
+
+    .qtable th,
+    .qtable td {
+      border: 1px solid #333;
+      padding: 8px 8px;
+      vertical-align: top;
+    }
+
+    .qtable thead th {
+      text-align: center;
+      font-weight: 800;
+      background: #f3f3f3;
+    }
+
+    .col-date {
+      width: 100px;
+    }
+
+    .col-doc-no {
+      width: 120px;
+    }
+
+    .col-desc {
+      width: auto;
+    }
+
+    .col-amount {
+      width: 120px;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .right {
+      text-align: right;
+    }
+
+    /* ===== Summary ===== */
+    .qtable-summary {
+      margin-top: 0;
+      border-top: none;
+    }
+
+    .qtable-summary td {
+      padding: 8px;
+      vertical-align: middle;
+    }
+
+    .qtable-summary .note-cell {
+      padding: 8px;
+      vertical-align: top;
+    }
+
+    .note-cell {
+      font-size: 12px;
+      white-space: pre-line;
+      vertical-align: top;
+    }
+
+    .sum-label {
+      background: #fafafa;
+      text-align: right;
+      padding-right: 20px !important;
+    }
+
+    .sum-value {
+      background: #fff;
+      text-align: right;
+    }
+
+    .amount-words {
+      text-align: center;
+      font-weight: 800;
+      padding: 9px 8px !important;
+      background: #e9e9e9;
+    }
+
+    /* ===== Signatures ===== */
+    .sign-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 30px;
+      margin-top: 38px;
+      align-items: end;
+      page-break-inside: avoid;
+    }
+
+    .sign-col {
+      text-align: center;
+    }
+
+    .sign-label {
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .sign-line {
+      border-bottom: 1px solid #333;
+      height: 22px;
+      margin-bottom: 0;
+    }
+
+    .sign-date {
+      font-size: 12px;
+      margin-top: 20px;
+    }
+
+    .sign-date .dots {
+      border-bottom: 1px dotted #333;
+      display: inline-block;
+      width: 120px;
+      transform: translateY(-2px);
+    }
+
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+
+    <div class="doc-title">
+      <div class="doc-subtitle">ใบสำคัญจ่าย</div>
+    </div>
+
+    <!-- Document Meta -->
+    <div class="info-row">
+      <div></div>
+      <div class="docmeta">
+        <div class="kv"><span class="k">วันที่เอกสาร</span><span class="v">{{doc.date}}</span></div>
+        <div class="kv"><span class="k">เลขที่เอกสาร</span><span class="v">{{doc.number}}</span></div>
+      </div>
+    </div>
+
+    <!-- Payment Section -->
+    <div class="payment-section">
+      <div class="kv" style="margin-bottom: 8px;">
+        <span class="k">จ่ายให้แก่</span>
+        <span class="v">
+          <div>{{payee.name}}</div>
+          <div class="pay-methods">
+            <div class="pay-method-row">
+              <span class="box {{#if payment.is_cash}}checked{{/if}}"></span>
+              <span>เงินสด</span>
+            </div>
+            <div class="pay-method-row">
+              <span class="box {{#if payment.is_transfer}}checked{{/if}}"></span>
+              <span>เงินโอนเข้าบัญชี</span>
+              <span class="line">{{safeText payment.bank ""}}</span>
+            </div>
+            <div class="pay-method-row">
+              <span class="box {{#if payment.is_cheque}}checked{{/if}}"></span>
+              <span>เช็คเลขที่</span>
+              <span class="line sm">{{safeText payment.cheque_no ""}}</span>
+              <span>ธนาคาร</span>
+              <span class="line sm">{{safeText payment.bank ""}}</span>
+              <span>วันที่</span>
+              <span class="line xs">{{safeText payment.cheque_date ""}}</span>
+              <span>จำนวนเงิน</span>
+              <span class="line sm">{{#if payment.amount}}{{money payment.amount}}{{/if}}</span>
+            </div>
+          </div>
+        </span>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <table class="qtable">
+      <colgroup>
+        <col class="col-date" />
+        <col class="col-doc-no" />
+        <col class="col-desc" />
+        <col class="col-amount" />
+      </colgroup>
+
+      <thead>
+        <tr>
+          <th>วันที่เอกสาร</th>
+          <th>เลขที่เอกสาร</th>
+          <th>รายการ</th>
+          <th>จำนวนเงิน</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {{#if items.length}}
+          {{#each items}}
+          <tr>
+            <td class="center">{{safeText date ""}}</td>
+            <td class="center">{{safeText doc_no ""}}</td>
+            <td>{{safeText description ""}}</td>
+            <td class="right">{{#if amount}}{{money amount}}{{else}}-{{/if}}</td>
+          </tr>
+          {{/each}}
+        {{else}}
+          <tr>
+            <td class="center"></td>
+            <td class="center"></td>
+            <td></td>
+            <td class="right"></td>
+          </tr>
+        {{/if}}
+      </tbody>
+    </table>
+
+    <!-- Summary -->
+    <table class="qtable qtable-summary">
+      <colgroup>
+        <col class="col-date" />
+        <col class="col-doc-no" />
+        <col class="col-desc" />
+        <col class="col-amount" />
+      </colgroup>
+
+      <tbody>
+        <tr>
+          <td class="note-cell" colspan="2" rowspan="3">
+            <strong>หมายเหตุ:</strong><br>
+            {{notes}}
+          </td>
+
+          <td class="sum-label">จำนวนเงินรวม</td>
+          <td class="sum-value right">{{#if summary.subtotal}}{{money summary.subtotal}}{{else}}-{{/if}}</td>
+        </tr>
+
+        <tr>
+          <td class="sum-label">ภาษีมูลค่าเพิ่ม 7%</td>
+          <td class="sum-value right">{{#if summary.vat}}{{money summary.vat}}{{else}}-{{/if}}</td>
+        </tr>
+
+        <tr>
+          <td class="sum-label"><strong>คงเหลือสุทธิ</strong></td>
+          <td class="sum-value right"><strong>{{#if summary.net_total}}{{money summary.net_total}}{{else}}-{{/if}}</strong></td>
+        </tr>
+
+        <tr>
+          <td class="amount-words" colspan="4">
+            {{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Signatures -->
+    <div class="sign-row">
+      <div class="sign-col">
+        <div class="sign-label">ผู้จัดทำ</div>
+        <div class="sign-line"></div>
+        <div class="sign-date">วันที่ <span class="dots"></span></div>
+      </div>
+
+      <div class="sign-col">
+        <div class="sign-label">ผู้ตรวจสอบ</div>
+        <div class="sign-line"></div>
+        <div class="sign-date">วันที่ <span class="dots"></span></div>
+      </div>
+
+      <div class="sign-col">
+        <div class="sign-label">ผู้อนุมัติ</div>
+        <div class="sign-line"></div>
+        <div class="sign-date">วันที่ <span class="dots"></span></div>
+      </div>
+
+      <div class="sign-col">
+        <div class="sign-label">ผู้รับเงิน</div>
+        <div class="sign-line"></div>
+        <div class="sign-date">วันที่ <span class="dots"></span></div>
+      </div>
+    </div>
+
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+  <meta charset="utf-8" />
+  <title>ใบขอเบิกเงิน {{doc.number}}</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Sarabun", "Tahoma", Arial, sans-serif;
+      color: #111;
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .page {
+      max-width: 800px;
+      margin: 0 auto;
+      border: 1px solid #eee;
+      padding: 40px;
+      position: relative;
+    }
+
+    /* ===== Header Section ===== */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #333;
+      padding-bottom: 15px;
+      margin-bottom: 10px;
+    }
+
+    .company-info {
+      flex: 1;
+    }
+
+    .company-name {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .company-address {
+      font-size: 13px;
+      color: #444;
+    }
+
+    .logo-box {
+      width: 100px;
+      text-align: right;
+    }
+
+    .logo-img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* ===== Title & Doc Number ===== */
+    .doc-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .doc-title {
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: underline;
+      font-style: italic;
+    }
+
+    .doc-no-bar {
+      background-color: #444;
+      color: #fff;
+      padding: 5px 15px;
+      font-weight: bold;
+      width: 100%;
+      margin: 15px 0;
+    }
+
+    /* ===== Content Body ===== */
+    .section-title {
+      font-weight: bold;
+      font-size: 17px;
+      margin-top: 25px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+      display: inline-block;
+    }
+
+    .data-row {
+      display: grid;
+      grid-template-columns: 160px 10px 1fr;
+      margin-bottom: 12px;
+    }
+
+    .label {
+      font-weight: bold;
+    }
+
+    .value {
+      padding-left: 10px;
+      white-space: pre-line;
+    }
+
+    .amount-box {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* ===== Signature Section ===== */
+    .signature-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+      margin-top: 80px;
+      text-align: center;
+    }
+
+    .sign-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .sign-line {
+      width: 100%;
+      border-bottom: 1px dotted #333;
+      margin-bottom: 10px;
+      min-height: 30px;
+      position: relative;
+    }
+
+    .handwritten-sign {
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Brush Script MT', cursive;
+      font-size: 24px;
+    }
+
+    .date-line {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    @media print {
+      body {
+        padding: 0;
+      }
+
+      .page {
+        border: none;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="company-info">
+        <div class="company-name">{{company.name}}</div>
+        <div class="company-address">
+          {{company.address}}<br>
+          โทร. {{company.phone}}<br>
+          อีเมล: {{company.email}}
+        </div>
+      </div>
+      <div class="logo-box">
+        {{#if company.logo_url}}
+        <img class="logo-img" src="{{company.logo_url}}" alt="logo">
+        {{else}}
+        <img class="logo-img" src="https://via.placeholder.com/80x80?text=LOGO" alt="logo">
+        {{/if}}
+      </div>
+    </div>
+
+    <div style="text-align: center;">
+      <span class="doc-title">ใบเบิกเงินสดย่อย</span>
+    </div>
+
+    <div class="doc-no-bar">เลขที่ : {{doc.number}}</div>
+
+    <div class="section-title">ข้อมูลการเบิก</div>
+
+    <div class="data-row">
+      <div class="label">ชื่อรายการเบิก</div>
+      <div>:</div>
+      <div class="value">{{doc.title}}</div>
+    </div>
+
+    <div class="data-row">
+      <div class="label">วันที่ต้องการเบิก</div>
+      <div>:</div>
+      <div class="value">{{doc.request_date}}</div>
+    </div>
+
+    <div class="data-row">
+      <div class="label">จำนวนเงินที่จะเบิก</div>
+      <div>:</div>
+      <div class="value amount-box">{{money doc.amount}} บาท</div>
+    </div>
+
+    <div class="data-row">
+      <div class="label">รายละเอียดเพิ่มเติม</div>
+      <div>:</div>
+      <div class="value">{{doc.remark}}</div>
+    </div>
+
+    <div class="data-row">
+      <div class="label">ฝ่าย / แผนก</div>
+      <div>:</div>
+      <div class="value">{{doc.department}}</div>
+    </div>
+
+    <div class="section-title">ข้อมูลผู้ทำรายการเบิก</div>
+
+    <div class="data-row">
+      <div class="label">ชื่อ - นามสกุล</div>
+      <div>:</div>
+      <div class="value">{{requester.name}}</div>
+    </div>
+
+    <div class="data-row">
+      <div class="label">ตำแหน่ง</div>
+      <div>:</div>
+      <div class="value">{{requester.position}}</div>
+    </div>
+
+    <div class="data-row">
+      <div class="label">เลขบัญชีธนาคาร</div>
+      <div>:</div>
+      <div class="value">{{requester.bank_info}}</div>
+    </div>
+
+    <div class="signature-section">
+      <div class="sign-wrapper">
+        <div class="sign-line">
+          {{#if sign1}} <span class="handwritten-sign">Signature</span> {{/if}}
+        </div>
+        <div>( {{requester.name_title}} )</div>
+      </div>
+
+      <div class="sign-wrapper">
+        <div class="sign-line">
+          {{#if sign2}} <span class="handwritten-sign">Approved</span> {{/if}}
+        </div>
+        <div>( {{approver.name}} )</div>
+        <div class="date-line">วันที่ ........./........../..........</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+
+</html>

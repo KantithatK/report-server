@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>หนังสือรับรองการหักภาษี ณ ที่จ่าย {{safeText doc.number ""}}</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "TH Sarabun New", "Sarabun", "Tahoma", "Arial", sans-serif;
+      line-height: 1.25;
+      color: #000;
+      background: #f5f5f5;
+      padding: 10mm;
+    }
+
+    .page {
+      width: 190mm;
+      min-height: 277mm;
+      margin: 0 auto;
+      background: #fff;
+    }
+
+    .row {
+      display: flex;
+      gap: 6mm;
+    }
+
+    .col {
+      flex: 1;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .right {
+      text-align: right;
+    }
+
+    .mt1 {
+      margin-top: 1mm;
+    }
+
+    .mt2 {
+      margin-top: 2mm;
+    }
+
+    .mt3 {
+      margin-top: 3mm;
+    }
+
+    .mt4 {
+      margin-top: 4mm;
+    }
+
+    .outer {
+      border: 1px solid #000;
+      padding: 2mm;
+    }
+
+    .box {
+      border: 1px solid #000;
+      border-radius: 1mm;
+      padding: 2mm;
+      font-size: 10pt;
+    }
+
+    .field {
+      display: inline-block;
+      border-bottom: 1px dotted #000;
+      min-width: 25mm;
+      padding: 0 1.5mm;
+      vertical-align: baseline;
+    }
+
+    .field.name-short {
+      min-width: 50mm;
+    }
+
+    .field.xw {
+      min-width: 165mm;
+    }
+
+    .field.n {
+      min-width: 18mm;
+    }
+
+    .boxed-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 25mm;
+      height: 5mm;
+      border: 1px solid #000;
+      box-sizing: border-box;
+    }
+
+    .id-box {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .id-box .digit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 5mm;
+      height: 5mm;
+      border: 1px solid #000;
+      box-sizing: border-box;
+    }
+
+    .id-box .dash {
+      display: inline-block;
+    }
+
+    .nowrap-row {
+      flex-wrap: nowrap;
+    }
+
+    .nowrap-row>div {
+      white-space: nowrap;
+    }
+
+    .cb {
+      display: inline-block;
+      width: 6mm;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .cb.checked::before {
+      content: "☑";
+    }
+
+    .cb.unchecked::before {
+      content: "☐";
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      border: 1px solid #000;
+      vertical-align: top;
+      word-wrap: break-word;
+    }
+
+    th {
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .num {
+      text-align: right;
+    }
+
+    .date {
+      text-align: center;
+    }
+
+    .sig-area {
+      border: 1px solid #000;
+      padding: 2mm;
+      display: flex;
+      gap: 6mm;
+      align-items: stretch;
+    }
+
+    .sig-left {
+      flex: 1;
+    }
+
+    .sig-right {
+      width: 20mm;
+      position: relative;
+    }
+
+    .stamp {
+      position: absolute;
+      right: 10mm;
+      top: 1mm;
+      width: 20mm;
+      height: 20mm;
+      border: 1px solid #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2mm;
+    }
+
+    .title {
+      font-weight: 700;
+      font-size: 14pt;
+    }
+
+    .subtitle {
+      font-size: 12pt;
+    }
+
+    .avoid-break {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .footer-row {
+      display: flex;
+      gap: 1mm;
+      align-items: stretch;
+    }
+
+    .footer-row-2 {
+      display: flex;
+      gap: 1mm;
+      align-items: stretch;
+    }
+
+    .warn-box {
+      width: 40mm;
+      border: 1px solid #000;
+      border-radius: 1mm;
+      padding: 2mm;
+      line-height: 1.2;
+    }
+
+    .sig-box {
+      flex: 1;
+      margin-top: 0 !important;
+      border-radius: 1mm;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+
+      .page {
+        box-shadow: none;
+      }
+    }
+
+    /* เส้นคั่นแนวนอนคอลัมน์ 2-4 เป็นเส้นจุด (เฉพาะ tbody) */
+    .wht-table tbody td:not(:first-child) {
+      border-top: 1px dotted #000;
+      border-bottom: 1px dotted #000;
+      border-left: 1px solid #000;
+      border-right: 1px solid #000;
+    }
+
+    /* คอลัมน์ 1 ไม่แสดงเส้นคั่นแนวนอนทุกแถว */
+    .wht-table tbody td:first-child {
+      border-top: 0;
+      border-bottom: 0;
+      border-left: 1px solid #000;
+      border-right: 1px solid #000;
+    }
+
+    /* แถวสรุปท้ายตาราง ต้องมีเส้นคั่นแบบเส้นตรง */
+    .wht-table tbody tr:nth-last-child(2) td {
+      border-top: 1px solid #000 !important;
+      border-bottom: 1px solid #000 !important;
+    }
+
+    .wht-table tbody tr:last-child td {
+      border-bottom: 1px solid #000 !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page" style="font-size: 8pt;">
+
+    <div>
+      <div>ฉบับที่ 1 (สำหรับผู้ถูกหักภาษี ณ ที่จ่าย ใช้แนบพร้อมกับแบบแสดงรายการภาษี)</div>
+      <div>ฉบับที่ 2 (สำหรับผู้ถูกหักภาษี ณ ที่จ่าย เก็บไว้เป็นหลักฐาน)</div>
+    </div>
+
+    <div class="outer">
+
+      <div style="position: relative;">
+        <div class="center">
+          <div class="title">หนังสือรับรองการหักภาษี ณ ที่จ่าย</div>
+          <div class="subtitle">ตามมาตรา 50 ทวิแห่งประมวลรัษฎากร</div>
+        </div>
+        <div style="position: absolute; top: 0; right: 0;">
+          <div class="right">
+            <div>เล่มที่ <span class="field n">{{safeText doc.book_no ""}}</span></div>
+            <div class="mt2">เลขที่ <span class="field n">{{safeText doc.number ""}}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ผู้มีหน้าที่หัก -->
+      <div class="box mt1 avoid-break">
+        <div class="row nowrap-row" style="align-items:center; justify-content:space-between;">
+          <div><b>ผู้มีหน้าที่หักภาษี ณ ที่จ่าย :</b></div>
+          <div style="margin-left:auto;">
+            <div class="right"><b>เลขประจำตัวผู้เสียภาษีอากร (13หลัก)*</b>
+              <span class="id-box" aria-label="เลขประจำตัวผู้เสียภาษี">
+                {{#each withholder.tax_id_boxes.p1}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes.p2}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes.p3}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes.p4}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes.p5}}<span class="digit">{{{this}}}</span>{{/each}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt1 nowrap-row" style="align-items:center; justify-content:space-between;">
+          <div><b>ชื่อ</b> <span class="field name-short">{{safeText withholder.name ""}}</span></div>
+          <div style="margin-left:auto;">
+            <div class="right"><b>เลขประจำตัวผู้เสียภาษีอากร</b>
+              <span class="id-box" aria-label="เลขประจำตัวผู้เสียภาษี">
+                {{#each withholder.tax_id_boxes.p1}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes.p2}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes.p3}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes.p4}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes.p5}}<span class="digit">{{{this}}}</span>{{/each}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tiny" style="font-size: 8pt;">(ให้ระบุว่าเป็นบุคคล นิติบุคคล บริษัท สมาคม หรือคณะบุคคล)</div>
+
+        <div class="row nowrap-row" style="align-items:center; justify-content:space-between;">
+          <div><b>ที่อยู่</b> <span class="field xw">{{safeText withholder.address ""}}</span></div>
+        </div>
+        <div class="tiny" style="font-size: 8pt;">(ให้ระบุชื่ออาคาร/หมู่บ้าน ห้องเลขที่ ชั้นที่ เลขที่ ตรอก/ซอย หมู่ที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด)</div>
+      </div>
+
+      <!-- ผู้ถูกหัก -->
+      <div class="box mt1 avoid-break">
+        <div class="row nowrap-row" style="align-items:center; justify-content:space-between;">
+          <div><b>ผู้ถูกหักภาษี ณ ที่จ่าย :</b></div>
+          <div style="margin-left:auto;">
+            <div class="right"><b>เลขประจำตัวผู้เสียภาษีอากร (13หลัก)*</b>
+              <span class="id-box" aria-label="เลขประจำตัวผู้เสียภาษี">
+                {{#each payee.tax_id_boxes.p1}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes.p2}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes.p3}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes.p4}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes.p5}}<span class="digit">{{{this}}}</span>{{/each}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt1 nowrap-row" style="align-items:center; justify-content:space-between;">
+          <div><b>ชื่อ</b> <span class="field name-short">{{safeText payee.name ""}}</span></div>
+          <div style="margin-left:auto;">
+            <div class="right"><b>เลขประจำตัวผู้เสียภาษีอากร</b>
+              <span class="id-box" aria-label="เลขประจำตัวผู้เสียภาษี">
+                {{#each payee.tax_id_boxes.p1}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes.p2}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes.p3}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes.p4}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes.p5}}<span class="digit">{{{this}}}</span>{{/each}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tiny" style="font-size: 8pt;">(ให้ระบุว่าเป็นบุคคล นิติบุคคล บริษัท สมาคม หรือคณะนิติบุคคล)</div>
+
+        <div class="row nowrap-row" style="align-items:center; justify-content:space-between;">
+          <div><b>ที่อยู่</b> <span class="field xw">{{safeText payee.address ""}}</span></div>
+        </div>
+        <div class="tiny" style="font-size: 8pt;">(ให้ระบุชื่ออาคาร/หมู่บ้าน ห้องเลขที่ ชั้นที่ เลขที่ ตรอก/ซอย หมู่ที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด)</div>
+
+        <div class="row mt1" style="align-items:flex-start;">
+          <div class="col" style="max-width:55mm;">
+            <b>ลำดับที่</b> <span class="boxed-num">{{safeText doc.sequence_no ""}}</span> ในแบบ
+          </div>
+
+          <div class="col">
+            <span class="cb {{#if form_types.pnd1k}}checked{{else}}unchecked{{/if}}"></span> (1) ภ.ง.ด.1ก
+            <span class="cb {{#if form_types.pnd1k_special}}checked{{else}}unchecked{{/if}}"></span> (2) ภ.ง.ด.1ก พิเศษ
+            <span class="cb {{#if form_types.pnd2}}checked{{else}}unchecked{{/if}}"></span> (3) ภ.ง.ด.2
+            <span class="cb {{#if form_types.pnd3}}checked{{else}}unchecked{{/if}}"></span> (4) ภ.ง.ด.3
+          </div>
+        </div>
+
+        <div class="row" style="align-items:flex-start;">
+          <div class="col" style="max-width:55mm;">
+            <div class="tiny" style="font-size: 8pt;">(ให้สามารถอ้างอิงหรือสอบยันกันได้ระหว่างลำดับที่ตามหนังสือรับรองฯ กับแบบยื่นรายการภาษีหักที่จ่าย)</div>
+          </div>
+
+          <div class="col">
+            <span class="cb {{#if form_types.pnd2k}}checked{{else}}unchecked{{/if}}"></span> (5) ภ.ง.ด.2ก
+            <span class="cb {{#if form_types.pnd3k}}checked{{else}}unchecked{{/if}}"></span> (6) ภ.ง.ด.3ก
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="cb {{#if form_types.pnd53}}checked{{else}}unchecked{{/if}}"></span> (7) ภ.ง.ด.53
+          </div>
+        </div>
+      </div>
+
+      <!-- ตารางเงินได้ -->
+      <div class="mt1 avoid-break">
+        <table class="wht-table" style="font-size: 10pt;">
+          <colgroup>
+            <col style="width:58%;">
+            <col style="width:14%;">
+            <col style="width:14%;">
+            <col style="width:14%;">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>ประเภทเงินได้พึงประเมินจ่าย</th>
+              <th>วัน เดือน หรือปีที่จ่าย</th>
+              <th>จำนวนเงินที่จ่าย</th>
+              <th>ภาษีที่หักและนำส่งไว้</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each income_rows}}
+            <tr class="{{row_class}}">
+              <td style="{{#if indent_mm}}padding-left:{{indent_mm}}mm;{{/if}}">
+                {{label}}
+                {{#if other_text}} <span class="field w">{{safeText other_text ""}}</span>{{/if}}
+              </td>
+              <td class="date">{{safeText date "-"}}</td>
+              <td class="num">{{moneyOrDash paid_amount}}</td>
+              <td class="num">{{moneyOrDash withheld_tax}}</td>
+            </tr>
+            {{/each}}
+
+            <tr>
+              <td class="right" colspan="2"><b>รวมเงินที่จ่ายและภาษีที่หักนำส่ง</b></td>
+              <td class="num"><b>{{money summary.total_paid}}</b></td>
+              <td class="num"><b>{{money summary.total_withheld}}</b></td>
+            </tr>
+
+            <tr>
+              <td colspan="4"><b>รวมเงินภาษีที่หักนำส่ง (ตัวอักษร) ({{safeText summary.total_withheld_text ""}})</b></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box mt1 small avoid-break" style="font-size: 10pt;">
+        <b>เงินที่จ่ายเข้า</b>
+        กบข./กสจ./กองทุนสงเคราะห์ครูโรงเรียนเอกชน <span class="field n">{{safeText contrib.teacher_fund_amount ""}}</span> บาท
+        &nbsp;&nbsp; กองทุนประกันสังคม <span class="field n">{{safeText contrib.social_security_amount ""}}</span> บาท
+        &nbsp;&nbsp; กองทุนสำรองเลี้ยงชีพ <span class="field n">{{safeText contrib.provident_fund_amount ""}}</span> บาท
+      </div>
+
+      <div class="box mt1 avoid-break" style="font-size: 10pt;">  
+        <b>ผู้จ่ายเงิน</b>
+        <span class="cb {{#if payment.one_time}}checked{{else}}unchecked{{/if}}"></span> (1) ออกภาษีให้ครั้งเดียว
+        <span class="cb {{#if payment.forever}}checked{{else}}unchecked{{/if}}"></span> (2) ออกภาษีให้ตลอดไป
+        <span class="cb {{#if payment.withholding}}checked{{else}}unchecked{{/if}}"></span> (3) หักภาษี ณ ที่จ่าย
+        <span class="cb {{#if payment.other}}checked{{else}}unchecked{{/if}}"></span> (4) อื่น ๆ (ระบุ) <span class="field">{{safeText payment.other_text ""}}</span>
+      </div>
+
+      <div class="mt1 footer-row avoid-break" style="font-size: 10pt;">
+        <div class="warn-box">
+          <b>คำเตือน</b> ผู้มีหน้าที่ออกหนังสือรับรองการหักภาษี ณ ที่จ่าย
+          ฝ่าฝืนไม่ปฏิบัติตามมาตรา 50 ทวิ แห่งประมวลรัษฎากร
+          ต้องรับโทษทางอาญา ตามมาตรา 35 แห่งประมวลรัษฎากร
+        </div>
+
+        <div class="sig-area sig-box">
+          <div class="sig-left" style="margin-left: 10mm;">
+            <div class="small">ขอรับรองว่าข้อความและตัวเลขดังกล่าวข้างต้นถูกต้องตรงกับความจริงทุกประการ</div>
+            <div class="mt1 small">
+              ลงชื่อ <span class="field" style="min-width: 60mm;">{{safeText signer.name ""}}</span> ผู้จ่ายเงิน
+            </div>
+            <div class="mt1 small">
+              <span class="field" style="margin-left:30mm; min-width: 15mm;">{{safeText signer.date ""}}</span>
+            </div>
+            <div class="mt1 small" style="margin-left:22mm">(วัน เดือน ปี ที่ออกหนังสือรับรอง)</div>
+          </div>
+          <div class="sig-right">
+            <div class="stamp">{{{stamp_text}}}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt1 footer-row-2 avoid-break">
+        <div><b>หมายเหตุ เลขประจำตัวผู้มีหน้าที่เสียภาษีอากร (13 หลัก) หมายถึง</b></div>
+
+        <div>
+          <div>1. กรณีบุคคลธรรมชาติไทย ให้ใช้เลขประจำตัวประชาชนของกรมการปกครอง</div>
+          <div>2. กรณีนิติบุคคล ให้ใช้เลขทะเบียนนิติบุคคลของกรมพัฒนาธุรกิจการค้า</div>
+          <div>3. กรณีอื่น ๆ นอกเหนือจากข้อ 1 และ 2 ให้ใช้เลขประจำตัวผู้มีหน้าที่เสียภาษีอากร (13 หลัก)</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+
+</html>

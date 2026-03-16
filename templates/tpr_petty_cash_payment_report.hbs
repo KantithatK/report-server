@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>รายละเอียดการจ่ายเงินสดย่อย</title>
+
+  <style>
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; padding:0; }
+    body{
+      font-family:"TH Sarabun New","Sarabun","Tahoma",Arial,sans-serif;
+      color:#111;
+      font-size:14px;
+      line-height:1.25;
+    }
+    .page{ padding:18px 20px; width:100%; }
+
+    /* ===== Header ===== */
+    .header{
+      display:grid;
+      grid-template-columns: 1fr 140px;
+      gap:10px;
+      align-items:start;
+    }
+    .company .name{ font-weight:800; font-size:18px; margin-bottom:2px; }
+    .company{ font-size:14px; }
+    .logo-wrap{ display:flex; justify-content:flex-end; align-items:flex-start; height:64px; }
+    .logo-box{
+      width:92px; height:64px;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; letter-spacing:.5px;
+      border:1px solid transparent;
+    }
+    .logo-img{ width:92px; height:64px; object-fit:contain; display:block; }
+    .rule{
+      border-top:4px solid #111;
+      margin:8px 0 10px;
+      position:relative;
+    }
+    .rule:after{
+      content:"";
+      position:absolute;
+      right:110px;
+      top:-4px;
+      width:70px;
+      border-top:4px solid #111;
+    }
+
+    /* ===== Paper frame ===== */
+    .frame{
+      padding:18px 14px 12px;
+    }
+
+    .title{
+      text-align:center;
+      font-weight:800;
+      font-size:20px;
+      margin:0;
+    }
+    .subtitle{
+      text-align:center;
+      font-weight:800;
+      font-size:18px;
+      margin:4px 0 10px;
+    }
+
+    .top-info{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      align-items:end;
+      margin-bottom:6px;
+      font-size:14px;
+    }
+    .top-info .left,
+    .top-info .right{
+      display:flex;
+      gap:8px;
+      align-items:end;
+      font-weight:700;
+    }
+    .line{
+      display:inline-block;
+      border-bottom:1px solid #333;
+      height:18px;
+      min-width:160px;
+      transform: translateY(-1px);
+    }
+    .line.sm{ min-width:120px; }
+    .line.xs{ min-width:90px; }
+
+    /* ===== Table ===== */
+    table{ width:100%; border-collapse:collapse; }
+    .t{
+      border:2px solid #333;
+      table-layout:fixed;
+      margin-top:6px;
+      font-size:14px;
+    }
+    .t th,.t td{
+      border:1px solid #333;
+      padding:6px 6px;
+      height:24px;
+      vertical-align:top;
+    }
+    .t th{
+      text-align:center;
+      font-weight:800;
+      background:#f6f6f6;
+    }
+
+    /* Column widths */
+    .c-no{ width:48px; }
+    .c-date{ width:86px; }
+    .c-doc{ width:98px; }
+    .c-desc{ width:auto; }
+    .c-rec{ width:90px; }
+    .c-pay{ width:90px; }
+    .c-sign{ width:98px; }
+
+    .center{ text-align:center; }
+    .right{ text-align:right; }
+
+    .sumrow td{
+      font-weight:800;
+      height:30px;
+    }
+    .sumrow td:first-child{
+      text-align:center;
+    }
+
+    /* ===== Bottom summary boxes (ขวาล่าง) ===== */
+    .bottom-row{
+      display:grid;
+      grid-template-columns: 1fr 330px;
+      gap:10px;
+      margin-top:10px;
+      align-items:end;
+    }
+
+    .notes{
+      font-size:12px;
+      font-weight:700;
+      line-height:1.25;
+      white-space:pre-line;
+    }
+
+    .summary-boxes{
+      display:grid;
+      gap:10px;
+      justify-self:end;
+      width:330px;
+    }
+    .sb{
+      display:grid;
+      grid-template-columns: 1fr 110px;
+      align-items:stretch;
+      border:2px solid #333;
+      height:34px;
+    }
+    .sb .lbl{
+      padding:6px 8px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      text-align:right;
+      background:#fff;
+    }
+    .sb .val{
+      border-left:1px solid #333;
+      background:#d9d9d9;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      padding:6px 8px;
+      font-weight:800;
+    }
+
+    @media print{
+      body{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+      .page{ padding:0; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <!-- Header -->
+    <div class="header">
+      <div class="company">
+        <div class="name">{{company.name}}</div>
+        <div>{{company.address}}</div>
+        <div>โทร. {{company.phone}}{{#if company.fax}} แฟกซ์: {{company.fax}}{{/if}}</div>
+        <div>อีเมล: {{company.email}}</div>
+      </div>
+      <div class="logo-wrap">
+        {{#if company.logo_url}}
+          <img class="logo-img" src="{{company.logo_url}}" alt="logo" />
+        {{else}}
+          <div class="logo-box">LOGO</div>
+        {{/if}}
+      </div>
+    </div>
+    <div class="rule"></div>
+
+    <div class="frame">
+      <div class="title">รายละเอียดการจ่ายเงินสดย่อย</div>
+      <div class="subtitle">ประจำปีเดือน <span class="line sm">{{safeText report.month ""}}</span> พ.ศ. <span class="line xs">{{safeText report.year_be ""}}</span></div>
+      <div class="subtitle-dept" style="text-align:center; font-weight:700; margin-bottom:8px;">แผนก: <span class="line sm">{{safeText report.department ""}}</span></div>
+
+      <div class="top-info">
+        <div class="left">ผู้รักษาเงินสดย่อย <span class="line">{{safeText report.payer_name ""}}</span></div>
+        <div class="right" style="justify-content:flex-end;">รายงาน ณ วันที่ <span class="line sm">{{safeText report.report_date ""}}</span></div>
+      </div>
+
+      <table class="t">
+        <colgroup>
+          <col class="c-no" />
+          <col class="c-date" />
+          <col class="c-doc" />
+          <col class="c-desc" />
+          <col class="c-rec" />
+          <col class="c-pay" />
+          <col class="c-sign" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th class="c-no">ลำดับ</th>
+            <th class="c-date">วันที่</th>
+            <th class="c-doc">เลขที่เอกสาร</th>
+            <th class="c-desc">รายการ</th>
+            <th class="c-rec">รับ</th>
+            <th class="c-pay">จ่าย</th>
+            <th class="c-sign">คงเหลือ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each rows}}
+            <tr>
+              <td class="center">{{no}}</td>
+              <td class="center">{{date}}</td>
+              <td class="center">{{doc_no}}</td>
+              <td>{{description}}</td>
+              <td class="right">{{#if has_receive}}{{money receive}}{{/if}}</td>
+              <td class="right">{{#if has_pay}}{{money pay}}{{/if}}</td>
+              <td class="right">{{#if has_balance}}{{money balance}}{{/if}}</td>
+            </tr>
+          {{/each}}
+
+          <tr class="sumrow">
+            <td colspan="4">รวมเป็นเงินทั้งสิ้น</td>
+            <td class="right">{{money summary.total_receive}}</td>
+            <td class="right">{{money summary.total_pay}}</td>
+            <td class="right">{{money summary.total_balance}}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="bottom-row">
+        <div class="notes">{{safeText notes ""}}</div>
+
+        <div class="summary-boxes">
+          <div class="sb">
+            <div class="lbl">สรุปยอดเงินสดย่อย</div>
+            <div class="val">{{#if summary.cash_summary}}{{money summary.cash_summary}}{{/if}}</div>
+          </div>
+          <div class="sb">
+            <div class="lbl">ยอดเงินสดย่อยคงเหลือไปงวดหน้า</div>
+            <div class="val">{{#if summary.carry_forward}}{{money summary.carry_forward}}{{/if}}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>
