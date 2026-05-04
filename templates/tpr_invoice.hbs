@@ -202,14 +202,9 @@
         <div class="kv"><span class="k">เลขที่เอกสาร</span><span class="v">{{doc.number}}</span></div>
         <div class="kv"><span class="k">วันที่เอกสาร</span><span class="v">{{doc.date}}</span></div>
 
-        <!-- ✅ เปลี่ยนจากอ้างอิงใบกำกับภาษี -> อ้างอิงใบเสนอราคา / PO -->
         <div class="kv">
           <span class="k">อ้างอิงใบเสนอราคา</span>
           <span class="v">{{#if ref.quotation_no}}{{ref.quotation_no}}{{else}}-{{/if}}</span>
-        </div>
-        <div class="kv">
-          <span class="k">วันที่อ้างอิงเอกสาร</span>
-          <span class="v">{{#if ref.po_no}}{{ref.po_no}}{{else}}-{{/if}}</span>
         </div>
       </div>
     </div>
@@ -262,10 +257,10 @@
           <!-- ✅ เปลี่ยนเป็น “หมายเหตุ” และใส่ข้อความ 2 ข้อ ตาม requirement -->
           <td class="note-cell" colspan="3" rowspan="5">
             <div class="note-title">หมายเหตุ :</div>
-            <div class="note-text">
-1) กรณีชำระเงินโดยเช็คกรุณาสั่งจ่ายเช็คขีดคร่อมในนาม "{{company.name}}" เท่านั้น
-2) บริษัทฯ ขอสงวนสิทธิ์ในการแก้ไขใบกำกับภาษีภายใน 7 วัน นับจากวันที่ระบุในใบกำกับภาษี (ผิด ตก ยกเว้น E. &amp; OE.)
-            </div>
+            
+            {{#if note}}
+            <div class="note-text" style="margin-top:6px;">{{note}}</div>
+            {{/if}}
           </td>
 
           <!-- ✅ สรุปข้อมูลตามใบแจ้งหนี้ -->

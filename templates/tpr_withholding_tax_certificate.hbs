@@ -259,6 +259,13 @@
       }
     }
 
+    /* ลด padding แถวในตารางเงินได้เพื่อประหยัดพื้นที่แนวตั้ง */
+    .wht-table th,
+    .wht-table td {
+      padding: 0.3mm 1mm;
+      line-height: 1.1;
+    }
+
     /* เส้นคั่นแนวนอนคอลัมน์ 2-4 เป็นเส้นจุด (เฉพาะ tbody) */
     .wht-table tbody td:not(:first-child) {
       border-top: 1px dotted #000;
@@ -466,7 +473,7 @@
         &nbsp;&nbsp; กองทุนสำรองเลี้ยงชีพ <span class="field n">{{safeText contrib.provident_fund_amount ""}}</span> บาท
       </div>
 
-      <div class="box mt1 avoid-break" style="font-size: 10pt;">  
+      <div class="box mt1 avoid-break" style="font-size: 10pt;">
         <b>ผู้จ่ายเงิน</b>
         <span class="cb {{#if payment.one_time}}checked{{else}}unchecked{{/if}}"></span> (1) ออกภาษีให้ครั้งเดียว
         <span class="cb {{#if payment.forever}}checked{{else}}unchecked{{/if}}"></span> (2) ออกภาษีให้ตลอดไป

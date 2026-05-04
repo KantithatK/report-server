@@ -788,7 +788,7 @@ function parseNumberLoose(v) {
 }
 
 function toTaxIdBoxes(taxId) {
-  const digits = String(taxId || "").replace(/\D/g, "");
+  const digits = String(taxId || "").replace(/\D/g, "").slice(0, 13); // ใช้สูงสุด 13 หลักแรก
   const targetLengths = [1, 4, 5, 2, 1];
   const blanks = (n) => Array.from({ length: n }, () => "&nbsp;");
 
@@ -924,7 +924,6 @@ function normalizeInvoicePayload(payload) {
       payload?.quotation_no ||
       payload?.quotationNo ||
       "",
-    po_no: payload?.ref?.po_no || payload?.refPoNo || payload?.po_no || payload?.poNo || "",
   };
 
   return {
@@ -937,6 +936,7 @@ function normalizeInvoicePayload(payload) {
     },
     customer: normalizeCustomer(payload),
     ref,
+    note: payload?.note || "",
     items,
     summary,
   };
@@ -1027,8 +1027,20 @@ function normalizePurchaseOrderPayload(payload) {
 
 function normalizeReceiptPayload(payload) {
   const items = normalizeItems(payload);
-  const deposit = Number(payload?.deposit || payload?.summary?.deposit || 0);
-  const summary = computeReceiptSummary(items, deposit);
+  const deposit_return = Number(
+    payload?.deposit_return || payload?.summary?.deposit_return ||
+    payload?.deposit        || payload?.summary?.deposit        || 0
+  );
+  const raw = computeReceiptSummary(items, deposit_return);
+
+  // map ให้ตรง template variable (summary.total, summary.deposit_return)
+  const summary = {
+    total:          raw.subtotal,
+    deposit_return: raw.deposit,
+    after_deposit:  raw.after_deposit,
+    net_total:      raw.net_total,
+    total_text:     raw.total_text,
+  };
 
   return {
     css_inline: cssInline,
@@ -1038,6 +1050,7 @@ function normalizeReceiptPayload(payload) {
       date: payload?.doc?.date || payload?.docDate || "10/01/2026",
     },
     customer: normalizeCustomer(payload),
+    note: payload?.note || "",
     items,
     summary,
   };
@@ -1064,6 +1077,7 @@ function normalizeTaxReceiptPayload(payload) {
     },
     customer: normalizeCustomer(payload),
     ref,
+    note: payload?.note || "",
     items,
     summary,
   };
@@ -1161,15 +1175,23 @@ function normalizeWithholdingTaxCertificatePayload(payload) {
     { label: "6. อื่นๆ ระบุ", row_class: "", other_text: "" },
   ];
 
-  const income_rows = (rawIncomeRows || defaultIncomeRows).map((r) => ({
-    label: r?.label || "",
-    date: r?.date || "",
-    paid_amount: r?.paid_amount ?? r?.paidAmount ?? null,
-    withheld_tax: r?.withheld_tax ?? r?.withheldTax ?? null,
-    row_class: r?.row_class || r?.rowClass || "",
-    indent_mm: Number(r?.indent_mm ?? r?.indentMm ?? 0) || 0,
-    other_text: r?.other_text || r?.otherText || "",
-  }));
+  // Always use defaultIncomeRows as the authoritative list (fixed labels per Thai tax law).
+  // Client sends only the rows that have data, matched by row_index (0-based).
+  // We overlay date/paid_amount/withheld_tax from the client row into the matching default row.
+  const income_rows = defaultIncomeRows.map((defaultRow, idx) => {
+    const clientRow = rawIncomeRows
+      ? rawIncomeRows.find((r) => (r?.row_index ?? r?.rowIndex ?? -1) === idx)
+      : null;
+    return {
+      label: defaultRow.label,                                                 // ALWAYS the fixed official text
+      date: clientRow?.date || "",
+      paid_amount: clientRow?.paid_amount ?? clientRow?.paidAmount ?? null,
+      withheld_tax: clientRow?.withheld_tax ?? clientRow?.withheldTax ?? null,
+      row_class: defaultRow.row_class || "",
+      indent_mm: Number(defaultRow.indent_mm ?? 0) || 0,
+      other_text: clientRow?.other_text || clientRow?.otherText || defaultRow.other_text || "",
+    };
+  });
 
   const summary = computeWithholdingTaxCertificateSummary(income_rows, payload?.summary || {});
 
@@ -1276,6 +1298,7 @@ function normalizePaymentVoucherPayload(payload) {
       subtotal,
       vat: vat || 0,
       net_total,
+      total_text: thaiBahtText(net_total),
     },
     notes: payload?.notes || payload?.note || payload?.remark || "",
   };

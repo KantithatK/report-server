@@ -348,13 +348,15 @@
             <div class="pay-method-row">
               <span class="box {{#if payment.is_cheque}}checked{{/if}}"></span>
               <span>เช็คเลขที่</span>
-              <span class="line sm">{{safeText payment.cheque_no ""}}</span>
+              <span class="line sm">{{#if payment.is_cheque}}{{safeText payment.cheque_no ""}}{{/if}}</span>
+              {{#if payment.is_cheque}}
               <span>ธนาคาร</span>
               <span class="line sm">{{safeText payment.bank ""}}</span>
               <span>วันที่</span>
               <span class="line xs">{{safeText payment.cheque_date ""}}</span>
               <span>จำนวนเงิน</span>
               <span class="line sm">{{#if payment.amount}}{{money payment.amount}}{{/if}}</span>
+              {{/if}}
             </div>
           </div>
         </span>
