@@ -185,6 +185,7 @@ function routeLabelFromPath(url = "") {
   if (url.startsWith("/tpr-petty-cash-request")) return "PETTY_CASH_REQUEST";
   if (url.startsWith("/tpr-petty-cash-payment-report")) return "PETTY_CASH_REPORT";
   if (url.startsWith("/tpr-receipt-certification")) return "RECEIPT_CERTIFICATION";
+  if (url.startsWith("/tpr-payroll-slip")) return "PAYROLL_SLIP";
   if (url.startsWith("/health")) return "HEALTH";
   if (url.startsWith("/debug/css")) return "DEBUG_CSS";
   return "GENERAL";
@@ -456,6 +457,10 @@ Handlebars.registerHelper("safeText", (v, fallback = "-") => {
   return s ? s : fallback;
 });
 
+Handlebars.registerHelper("isZero", (v) => {
+  return Number(v || 0) === 0;
+});
+
 // =========================
 // Template compile (cache)
 // =========================
@@ -485,6 +490,9 @@ const templates = {
   ),
   receipt_certification: compileTemplate(
     path.join("templates", "tpr_receipt_certification.hbs")
+  ),
+  payroll_slip: compileTemplate(
+    path.join("templates", "tpr_payroll_slip.hbs")
   ),
 };
 
@@ -1564,6 +1572,138 @@ function normalizePettyCashPaymentReportPayload(payload) {
   };
 }
 
+function normalizePayrollSlipPayload(payload) {
+  const slip = payload?.slip || payload || {};
+
+  // Format Thai date "01-31 พ.ค. 2569"
+  function fmtThaiDate(d) {
+    if (!d) return "";
+    try {
+      const date = new Date(d);
+      return date.toLocaleDateString("th-TH", { day: "2-digit", month: "short", year: "numeric" });
+    } catch { return String(d); }
+  }
+
+  const period_start = payload?.schedule?.period_start || payload?.period_start || "";
+  const period_end   = payload?.schedule?.period_end   || payload?.period_end   || "";
+  const payment_date = payload?.schedule?.payment_date || payload?.payment_date || "";
+
+  const period = period_start && period_end
+    ? `${fmtThaiDate(period_start)} — ${fmtThaiDate(period_end)}`
+    : payload?.period || "";
+
+  // Bank account from employee_bank_accounts (first row)
+  const bankAcc = Array.isArray(payload?.bank_accounts) ? payload.bank_accounts[0] : null;
+  const bank_account = bankAcc
+    ? `${bankAcc.account_number || ""}${bankAcc.bank_name ? " (" + bankAcc.bank_name + ")" : ""}`
+    : payload?.bank_account || "";
+
+  // YTD totals (ส่งมาจาก frontend หรือ default 0)
+  const ytd = {
+    earnings: round2(parseNumberLoose(payload?.ytd?.earnings ?? payload?.ytd_earnings ?? 0)),
+    tax:      round2(parseNumberLoose(payload?.ytd?.tax      ?? payload?.ytd_tax      ?? 0)),
+    sso:      round2(parseNumberLoose(payload?.ytd?.sso      ?? payload?.ytd_sso      ?? 0)),
+  };
+
+  const deduct_absence = round2(
+    parseNumberLoose(slip?.deduct_absent ?? 0) + parseNumberLoose(slip?.deduct_late ?? 0)
+  );
+
+  // derive year (Buddhist Era) from period_end or current year
+  let year = "";
+  try {
+    const d = period_end ? new Date(period_end) : new Date();
+    year = String(d.getFullYear() + 543);
+  } catch { year = ""; }
+
+  // ─── Aggregate fields (fallback only when no slip_lines) ─────────────────
+  const earn_base    = round2(parseNumberLoose(slip?.earn_base    ?? slip?.salary_rate ?? 0));
+  const earn_ot      = round2(parseNumberLoose(slip?.earn_ot      ?? 0));
+  const earn_other   = round2(parseNumberLoose(slip?.earn_other   ?? 0));
+  const deduct_sso   = round2(parseNumberLoose(slip?.deduct_sso   ?? 0));
+  const deduct_tax   = round2(parseNumberLoose(slip?.deduct_tax   ?? 0));
+  const deduct_loan  = round2(parseNumberLoose(slip?.deduct_loan  ?? 0));
+  const deduct_other = round2(parseNumberLoose(slip?.deduct_other ?? 0));
+
+  const toDisplayLine = (line, fallbackName, fallbackNameEn = "") => ({
+    name: line?.earn_deduct_name || fallbackName,
+    nameEn: line?.earn_deduct_code || fallbackNameEn || "",
+    amount: round2(parseNumberLoose(line?.amount ?? 0)),
+    isBlank: false,
+  });
+
+  const blankLine = { name: "", nameEn: "", amount: null, isBlank: true };
+
+  const rawLines = Array.isArray(payload?.lines)
+    ? [...payload.lines].sort((left, right) => {
+        const leftSort = Number(left?.sort_order ?? 0);
+        const rightSort = Number(right?.sort_order ?? 0);
+        return leftSort - rightSort;
+      })
+    : [];
+
+  let incomeLines = rawLines
+    .filter((line) => line?.item_type === "income")
+    .map((line) => toDisplayLine(line, "รายได้", "INCOME"));
+
+  let deductionLines = rawLines
+    .filter((line) => line?.item_type === "deduction")
+    .map((line) => toDisplayLine(line, "รายการหัก", "DEDUCTION"));
+
+  if (incomeLines.length === 0 && deductionLines.length === 0) {
+    incomeLines = [
+      { name: "เงินเดือน/ค่าจ้าง", nameEn: "BASE", amount: earn_base, isBlank: false },
+      { name: "ค่าล่วงเวลา", nameEn: "OT", amount: earn_ot, isBlank: false },
+      { name: "รายได้อื่น", nameEn: "OTHER", amount: earn_other, isBlank: false },
+    ].filter((line) => line.amount !== 0);
+
+    deductionLines = [
+      { name: "ประกันสังคม", nameEn: "SSO", amount: deduct_sso, isBlank: false },
+      { name: "ภาษีหัก ณ ที่จ่าย", nameEn: "TAX", amount: deduct_tax, isBlank: false },
+      { name: "เงินกู้ยืม", nameEn: "LOAN", amount: deduct_loan, isBlank: false },
+      { name: "ขาด/ลา/มาสาย", nameEn: "ABSENT", amount: deduct_absence, isBlank: false },
+      { name: "รายการหักอื่น", nameEn: "OTHER", amount: deduct_other, isBlank: false },
+    ].filter((line) => line.amount !== 0);
+  }
+
+  const total_earnings   = round2(parseNumberLoose(slip?.total_earnings   ?? 0));
+  const total_deductions = round2(parseNumberLoose(slip?.total_deductions ?? 0));
+  const net_pay          = round2(parseNumberLoose(slip?.net_pay          ?? 0));
+
+  const ytdRows = [
+    { name: "เงินได้สะสม", nameEn: "YTD earnings", amount: ytd.earnings, isBold: false, isNetPay: false, isBlank: false },
+    { name: "ภาษีหัก ณ ที่จ่ายสะสม", nameEn: "YTD withholding tax", amount: ytd.tax, isBold: false, isNetPay: false, isBlank: false },
+    { name: "เงินประกันสังคมสะสม", nameEn: "Accumulated SSF", amount: ytd.sso, isBold: false, isNetPay: false, isBlank: false },
+    { name: "รวมเงินได้", nameEn: "Total earnings", amount: total_earnings, isBold: true, isNetPay: false, isBlank: false, toneClass: "summary-positive-row" },
+    { name: "รวมรายการหัก", nameEn: "Total deductions", amount: total_deductions, isBold: true, isNetPay: false, isBlank: false, toneClass: "summary-negative-row" },
+    { name: "เงินได้สุทธิ", nameEn: "Net pay", amount: net_pay, isBold: true, isNetPay: true, isBlank: false, noteText: `(${thaiBahtText(net_pay)})` },
+  ];
+
+  const rowCount = Math.max(incomeLines.length, deductionLines.length, ytdRows.length);
+  const rows = Array.from({ length: rowCount }, (_, index) => ({
+    income: incomeLines[index] || blankLine,
+    deduct: deductionLines[index] || blankLine,
+    ytd: ytdRows[index] || blankLine,
+  }));
+
+  return {
+    company: normalizeCompany(payload),
+    slip: {
+      employee_code:   slip?.employee_code   || "",
+      full_name_th:    slip?.full_name_th    || "",
+      position:        slip?.position        || "",
+      department_name: slip?.department_name || "",
+      note:            slip?.note            || "",
+    },
+    rows,
+    period,
+    payment_date: fmtThaiDate(payment_date),
+    bank_account,
+    year,
+    ytd,
+  };
+}
+
 // =========================
 // Puppeteer: browser singleton
 // =========================
@@ -1869,6 +2009,21 @@ makeDocRoutes({
   templateFn: templates.receipt_certification,
   normalizer: normalizeReceiptCertificationPayload,
   filename: "tpr_receipt_certification.pdf",
+});
+
+// ----- Payroll Slip (สลิปเงินเดือน) -----
+makeDocRoutes({
+  basePath: "/tpr-payroll-slip",
+  templateFn: templates.payroll_slip,
+  normalizer: normalizePayrollSlipPayload,
+  filename: "tpr_payroll_slip.pdf",
+  renderOptions: {
+    pdfOptions: {
+      format: "A4",
+      landscape: true,
+      margin: { top: "0mm", right: "0mm", bottom: "0mm", left: "0mm" },
+    },
+  },
 });
 
 // 404 handler

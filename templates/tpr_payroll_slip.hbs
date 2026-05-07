@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <title>สลิปเงินเดือน — {{slip.full_name_th}}</title>
+  <style>
+    @page { size: 9in 5.5in; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      font-family: "TH Sarabun New", "Sarabun", "Tahoma", Arial, sans-serif;
+      font-size: 11px;
+      color: #111;
+      line-height: 1.25;
+    }
+    .page {
+      width: 9in;
+      height: 5.5in;
+      padding: 0.16in 0.22in 0.08in;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: grid;
+      grid-template-columns: 1fr 0.9in 1fr;
+      align-items: start;
+      gap: 0.08in;
+      margin-bottom: 0.08in;
+    }
+    .company-name { font-size: 13px; font-weight: 700; }
+    .company-sub  { font-size: 8.5px; color: #555; margin-top: 1px; }
+    .emp-block    { margin-top: 0.06in; }
+    .emp-row      { display: flex; gap: 6px; font-size: 10px; margin-top: 2px; }
+    .emp-label    { color: #555; min-width: 1in; flex-shrink: 0; }
+    .emp-sub      { font-size: 8px; color: #999; display: block; }
+    .logo-box     { display: flex; justify-content: center; align-items: center; }
+    .logo-img     { max-width: 0.72in; max-height: 0.52in; object-fit: contain; }
+    .doc-title-block { text-align: right; }
+    .doc-title    { font-size: 14px; font-weight: 800; }
+    .doc-title-en { font-size: 9px; color: #555; }
+    .meta-row     { display: flex; justify-content: flex-end; gap: 8px; font-size: 10px; margin-top: 2px; }
+    .meta-label   { color: #555; text-align: right; min-width: 0.8in; }
+    .meta-sub     { font-size: 8px; color: #999; display: block; }
+    .meta-value   { font-weight: 600; min-width: 1.2in; }
+
+    /* ── MAIN TABLE ── */
+    .main-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-top: 0.05in;
+      flex: 0 0 auto;
+    }
+    .main-table th {
+      background: #1e3a5f;
+      color: #fff;
+      font-weight: 700;
+      font-size: 10px;
+      padding: 6px 8px;
+      border: 1px solid #1e3a5f;
+      text-align: left;
+    }
+    .th-sub { font-size: 7px; font-weight: 400; color: #cdd9e7; display: block; }
+    .main-table td {
+      width: 33.33%;
+      padding: 0;
+      border: 1px solid #c8d3e0;
+      vertical-align: top;
+    }
+    .column-stack {
+      display: flex;
+      flex-direction: column;
+    }
+    .ytd-stack {
+      display: flex;
+      flex-direction: column;
+    }
+    .cell-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      padding: 4px 7px;
+    }
+    .cell-row.blank-row { min-height: 18px; }
+    .cell-row.bold-row    { font-weight: 700; background: #f4f6f9; }
+    .cell-row.summary-positive-row {
+      color: #0f7a38;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+    .cell-row.summary-negative-row {
+      color: #b42318;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+    .cell-row.netpay-row  {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e3a5f;
+      padding: 10px 12px;
+      gap: 10px;
+    }
+    .item-name   { flex: 1; font-size: 11.5px; min-width: 0; }
+    .item-sub    { font-size: 7.8px; color: #888; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-amount { font-size: 11.5px; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
+    .val-zero    { color: #bbb; }
+    .bold-row .item-name   { font-weight: 700; }
+    .bold-row .item-amount { font-weight: 700; }
+    .summary-positive-row .item-name,
+    .summary-positive-row .item-amount,
+    .summary-negative-row .item-name,
+    .summary-negative-row .item-amount {
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .summary-positive-row .item-sub,
+    .summary-negative-row .item-sub {
+      color: rgba(17, 24, 39, 0.55);
+      font-size: 8px;
+    }
+    .netpay-label-wrap { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+    .netpay-value-wrap { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; text-align: right; }
+    .netpay-name   { display: block; font-size: 14px; font-weight: 800; color: #fff; }
+    .netpay-sub    { font-size: 8px; color: #c7d7ea; display: block; margin-top: 2px; }
+    .netpay-amount { display: block; font-size: 28px; font-weight: 900; color: #fff; text-align: center; line-height: 1; }
+    .netpay-note   { display: block; margin-top: 6px; color: #d9e7f4; font-size: 8.5px; text-align: right; }
+
+    /* ── FOOTER ── */
+    .table-footer-gap {
+      height: 0.18in;
+      flex: 1;
+      min-height: 0.12in;
+    }
+    .footer-row   { display: flex; justify-content: space-between; margin-top: 0.04in; gap: 0.2in; }
+    .footer-left  { flex: 1; }
+    .footer-right { flex: 1; text-align: right; }
+    .footer-label    { font-size: 9px; font-weight: 600; }
+    .footer-label-en { font-size: 7px; color: #888; margin-left: 4px; }
+    .sign-line {
+      display: inline-block;
+      width: 2.7in;
+      border-top: 1px solid #666;
+      margin-top: 0.18in;
+      padding-top: 3px;
+      font-size: 8px;
+      color: #555;
+      text-align: center;
+    }
+    .policy-text {
+      margin-top: 0.04in;
+      border-top: 1px solid #d0d7e3;
+      padding-top: 3px;
+      font-size: 6.5px;
+      color: #666;
+      text-align: center;
+      line-height: 1.2;
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="company-name">{{company.name}}</div>
+      {{#if company.address}}<div class="company-sub">{{company.address}}</div>{{/if}}
+      {{#if company.tax_id}}<div class="company-sub">เลขประจำตัวผู้เสียภาษี: {{company.tax_id}}</div>{{/if}}
+      <div class="emp-block">
+        <div class="emp-row">
+          <span class="emp-label">ชื่อนามสกุล(รหัส)<span class="emp-sub">Emp. name (Code)</span></span>
+          <span>{{slip.full_name_th}} ({{slip.employee_code}})</span>
+        </div>
+        <div class="emp-row">
+          <span class="emp-label">ตำแหน่ง<span class="emp-sub">Position</span></span>
+          <span>{{slip.position}}</span>
+        </div>
+        {{#if slip.department_name}}
+        <div class="emp-row">
+          <span class="emp-label">แผนก<span class="emp-sub">Department</span></span>
+          <span>{{slip.department_name}}</span>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+    <div class="logo-box">
+      {{#if company.logo_url}}
+        <img class="logo-img" src="{{company.logo_url}}" alt="logo" />
+      {{else}}
+        <div style="font-size:14px;font-weight:700;color:#1e3a5f;">{{company.short_name}}</div>
+      {{/if}}
+    </div>
+    <div class="doc-title-block">
+      <div class="doc-title">สลิปเงินเดือน</div>
+      <div class="doc-title-en">Pay Slip</div>
+      <div style="margin-top:6px;">
+        <div class="meta-row">
+          <div class="meta-label">รอบเงินเดือน<span class="meta-sub">Payroll Period</span></div>
+          <div class="meta-value">{{period}}</div>
+        </div>
+        <div class="meta-row">
+          <div class="meta-label">วันที่ชำระ<span class="meta-sub">Payment Date</span></div>
+          <div class="meta-value">{{payment_date}}</div>
+        </div>
+        {{#if bank_account}}
+        <div class="meta-row">
+          <div class="meta-label">เลขที่บัญชี<span class="meta-sub">Bank Account</span></div>
+          <div class="meta-value">{{bank_account}}</div>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN TABLE -->
+  <table class="main-table">
+    <thead>
+      <tr>
+        <th>เงินได้<span class="th-sub"> / Earnings</span></th>
+        <th>รายการหัก<span class="th-sub"> / Deductions</span></th>
+        <th>ปี {{year}}<span class="th-sub"> / Year To Date</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <div class="column-stack">
+            {{#each rows}}
+            <div class="cell-row {{#if income.isBlank}}blank-row{{/if}}">
+              {{#if income.isBlank}}
+                <span class="item-name">&nbsp;</span>
+              {{else}}
+                <span class="item-name">{{income.name}}<span class="item-sub">{{income.nameEn}}</span></span>
+                <span class="item-amount {{#if (isZero income.amount)}}val-zero{{/if}}">{{money income.amount}}</span>
+              {{/if}}
+            </div>
+            {{/each}}
+          </div>
+        </td>
+        <td>
+          <div class="column-stack">
+            {{#each rows}}
+            <div class="cell-row {{#if deduct.isBlank}}blank-row{{/if}}">
+              {{#if deduct.isBlank}}
+                <span class="item-name">&nbsp;</span>
+              {{else}}
+                <span class="item-name">{{deduct.name}}<span class="item-sub">{{deduct.nameEn}}</span></span>
+                <span class="item-amount {{#if (isZero deduct.amount)}}val-zero{{/if}}">{{money deduct.amount}}</span>
+              {{/if}}
+            </div>
+            {{/each}}
+          </div>
+        </td>
+        <td>
+          <div class="ytd-stack">
+            {{#each rows}}
+              {{#if ytd.isBlank}}
+              <div class="cell-row blank-row">
+                <span class="item-name">&nbsp;</span>
+              </div>
+              {{else}}
+                {{#if ytd.isNetPay}}
+                <div class="cell-row netpay-row">
+                  <span class="netpay-label-wrap">
+                    <span class="netpay-name">{{ytd.name}}</span>
+                    <span class="netpay-sub">{{ytd.nameEn}}</span>
+                  </span>
+                  <span class="netpay-value-wrap">
+                    <span class="netpay-amount">฿{{money ytd.amount}}</span>
+                    {{#if ytd.noteText}}<span class="netpay-note">{{ytd.noteText}}</span>{{/if}}
+                  </span>
+                </div>
+                {{else}}
+                  {{#if ytd.isBold}}
+                  <div class="cell-row bold-row {{ytd.toneClass}}">
+                    <span class="item-name">{{ytd.name}}<span class="item-sub">{{ytd.nameEn}}</span></span>
+                    <span class="item-amount">{{money ytd.amount}}</span>
+                  </div>
+                  {{else}}
+                  <div class="cell-row">
+                    <span class="item-name">{{ytd.name}}<span class="item-sub">{{ytd.nameEn}}</span></span>
+                    <span class="item-amount {{#if (isZero ytd.amount)}}val-zero{{/if}}">{{money ytd.amount}}</span>
+                  </div>
+                  {{/if}}
+                {{/if}}
+              {{/if}}
+            {{/each}}
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="table-footer-gap"></div>
+
+  <!-- FOOTER -->
+  <div class="footer-row">
+    <div class="footer-left">
+      <div class="footer-label">หมายเหตุ: <span class="footer-label-en">Remarks</span></div>
+      <div style="font-size:8.5px;margin-top:3px;color:#444;">{{slip.note}}</div>
+    </div>
+    <div class="footer-right">
+      <div class="sign-line">ลายเซ็นผู้จ่ายเงิน / Employer's Signature
+      </div>
+    </div>
+  </div>
+
+  <div class="policy-text">
+    ข้อมูลเงินเดือนและค่าจ้างเป็นข้อมูลส่วนบุคคล ห้ามเปิดเผยโดยเด็ดขาด เอกสารนี้มีผลเมื่อผู้มีอำนาจลงนามและตราประทับเท่านั้น<br/>
+    Salary and wages are confidential information. Disclosure is strictly prohibited. This document is only valid with an authorized signature and company stamp.
+  </div>
+
+</div>
+</body>
+</html>
