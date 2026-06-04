@@ -167,11 +167,15 @@
     }
 
     .col-qty {
-      width: 120px;
+      width: 60px;
+    }
+
+    .col-unit {
+      width: 70px;
     }
 
     .col-unitprice {
-      width: 120px;
+      width: 110px;
     }
 
     .col-amount {
@@ -361,14 +365,17 @@
       <div class="docmeta">
         <div class="kv"><span class="k">เลขที่เอกสาร</span><span class="v">{{doc.number}}</span></div>
         <div class="kv"><span class="k">วันที่เอกสาร</span><span class="v">{{doc.date}}</span></div>
-
         <div class="kv">
-          <span class="k">อ้างอิงใบแจ้งหนี้ / ใบวางบิล</span>
-          <span class="v">{{#if ref.billing_no}}{{ref.billing_no}}{{else}}-{{/if}}</span>
+          <span class="k">ผู้จัดทำ</span>
+          <span class="v">{{#if doc.prepared_by}}{{doc.prepared_by}}{{else}}-{{/if}}</span>
         </div>
         <div class="kv">
-          <span class="k">วันที่อ้างอิงเอกสาร</span>
-          <span class="v">{{#if ref.billing_date}}{{ref.billing_date}}{{else}}-{{/if}}</span>
+          <span class="k">อ้างอิงใบเสร็จรับเงิน</span>
+          <span class="v">{{#if ref.receipt_no}}{{ref.receipt_no}}{{else}}-{{/if}}</span>
+        </div>
+        <div class="kv">
+          <span class="k">วันที่ใบเสร็จรับเงิน</span>
+          <span class="v">{{#if ref.receipt_date}}{{ref.receipt_date}}{{else}}-{{/if}}</span>
         </div>
       </div>
     </div>
@@ -379,6 +386,7 @@
         <col class="col-no" />
         <col class="col-desc" />
         <col class="col-qty" />
+        <col class="col-unit" />
         <col class="col-unitprice" />
         <col class="col-amount" />
       </colgroup>
@@ -388,7 +396,8 @@
           <th class="col-no">ลำดับ</th>
           <th class="col-desc">รายการ</th>
           <th class="col-qty">จำนวน</th>
-          <th class="col-unitprice">หน่วยละ</th>
+          <th class="col-unit">หน่วย</th>
+          <th class="col-unitprice">ราคา/หน่วย</th>
           <th class="col-amount">จำนวนเงิน</th>
         </tr>
       </thead>
@@ -400,7 +409,8 @@
           <td>
             <div class="desc-strong">{{name}}</div>
           </td>
-          <td class="center">{{qty}} {{unit}}</td>
+          <td class="center">{{qty}}</td>
+          <td class="center">{{unit}}</td>
           <td class="right">{{money price}}</td>
           <td class="right">{{money line_total}}</td>
         </tr>
@@ -414,13 +424,18 @@
         <col class="col-no" />
         <col class="col-desc" />
         <col class="col-qty" />
+        <col class="col-unit" />
         <col class="col-unitprice" />
         <col class="col-amount" />
       </colgroup>
 
       <tbody>
         <tr>
-          <td class="note-cell" colspan="3" rowspan="5">
+          {{#if summary.deposit_return}}
+          <td class="note-cell" colspan="4" rowspan="5">
+          {{else}}
+          <td class="note-cell" colspan="4" rowspan="3">
+          {{/if}}
             <div class="pay-row">
               <span class="box"></span> <span>เงินสด</span>
               <span class="box" style="margin-left: 20px;"></span> <span>เงินโอนเข้าบัญชี</span> <span class="line"></span>
@@ -440,20 +455,19 @@
           </td>
 
           <td class="sum-label">รวมเงิน</td>
-          <td class="sum-value right">{{#if summary.total}}{{money summary.total}}{{else}}-{{/if}}</td>
+          <td class="sum-value right">{{#if summary.subtotal}}{{money summary.subtotal}}{{else}}-{{/if}}</td>
         </tr>
 
+        {{#if summary.deposit_return}}
         <tr>
           <td class="sum-label">หักคืนเงินจำ</td>
-          <td class="sum-value right">
-            {{#if summary.deposit_return}}-{{money summary.deposit_return}}{{else}}-{{/if}}
-          </td>
+          <td class="sum-value right">-{{money summary.deposit_return}}</td>
         </tr>
-
         <tr>
           <td class="sum-label">มูลค่าสินค้าหลังหักเงินจำ</td>
-          <td class="sum-value right">{{#if summary.after_deposit}}{{money summary.after_deposit}}{{else}}-{{/if}}</td>
+          <td class="sum-value right">{{money summary.after_deposit}}</td>
         </tr>
+        {{/if}}
 
         <tr>
           <td class="sum-label">ภาษีมูลค่าเพิ่ม 7%</td>
@@ -461,13 +475,13 @@
         </tr>
 
         <tr>
-          <td class="sum-label"><strong>ยอดเงินสุทธิ</strong></td>
+          <td class="sum-label"><strong>รวมทั้งสิ้น</strong></td>
           <td class="sum-value right"><strong>{{#if summary.net_total}}{{money
               summary.net_total}}{{else}}-{{/if}}</strong></td>
         </tr>
 
         <tr>
-          <td class="amount-words" colspan="5">
+          <td class="amount-words" colspan="6">
             {{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}}
           </td>
         </tr>

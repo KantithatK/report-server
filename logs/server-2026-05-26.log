@@ -1,0 +1,164 @@
+{"ts":"2026-05-26T01:42:19.723Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_quotation.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_quotation.hbs"}
+{"ts":"2026-05-26T01:42:19.725Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_credit_note.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_credit_note.hbs"}
+{"ts":"2026-05-26T01:42:19.727Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_invoice.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_invoice.hbs"}
+{"ts":"2026-05-26T01:42:19.728Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_purchase_order.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_purchase_order.hbs"}
+{"ts":"2026-05-26T01:42:19.729Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_receipt.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_receipt.hbs"}
+{"ts":"2026-05-26T01:42:19.730Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_tax_receipt.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_tax_receipt.hbs"}
+{"ts":"2026-05-26T01:42:19.731Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_withholding_tax_certificate.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_withholding_tax_certificate.hbs"}
+{"ts":"2026-05-26T01:42:19.732Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_payment_voucher.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_payment_voucher.hbs"}
+{"ts":"2026-05-26T01:42:19.734Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_receipt_voucher.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_receipt_voucher.hbs"}
+{"ts":"2026-05-26T01:42:19.735Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_petty_cash_voucher.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_petty_cash_voucher.hbs"}
+{"ts":"2026-05-26T01:42:19.736Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_petty_cash_request.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_petty_cash_request.hbs"}
+{"ts":"2026-05-26T01:42:19.737Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_petty_cash_payment_report.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_petty_cash_payment_report.hbs"}
+{"ts":"2026-05-26T01:42:19.738Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_receipt_certification.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_receipt_certification.hbs"}
+{"ts":"2026-05-26T01:42:19.739Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_payroll_slip.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_payroll_slip.hbs"}
+{"ts":"2026-05-26T01:42:19.741Z","level":"WARN","title":"CSS","message":"inline missing: C:\\Projcet TPR\\report-server\\public\\css\\quotation.css (ไม่จำเป็นถ้า CSS อยู่ใน hbs แล้ว)","cssPath":"C:\\Projcet TPR\\report-server\\public\\css\\quotation.css"}
+{"ts":"2026-05-26T01:42:19.785Z","level":"OK","title":"READY","message":"PDF server is running","port":4100,"logFile":"C:\\Projcet TPR\\report-server\\logs\\server-2026-05-26.log"}
+{"ts":"2026-05-26T01:42:19.786Z","level":"BOOT","message":"PDF server is running","port":4100,"logFile":"C:\\Projcet TPR\\report-server\\logs\\server-2026-05-26.log"}
+{"ts":"2026-05-26T02:03:00.741Z","level":"STEP","reqId":"MPLZQHOL-R5XDFA","route":"INVOICE","stage":"START","detail":"OPTIONS /tpr-invoice/pdf","method":"OPTIONS","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:00.743Z","level":"REQUEST_START","reqId":"MPLZQHOL-R5XDFA","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:03:00.752Z","level":"REQUEST_DONE","reqId":"MPLZQHOL-R5XDFA","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","status":204,"durationMs":10,"responseSize":"0 B"}
+{"ts":"2026-05-26T02:03:00.755Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"START","detail":"POST /tpr-invoice/pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:00.755Z","level":"REQUEST_START","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:03:00.789Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"ROUTE","detail":"pdf mode","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:00.790Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"NORMALIZE","detail":"payload 1.08 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:00.792Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"TEMPLATE","detail":"render html before pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:00.827Z","level":"INFO","title":"PUPPETEER","message":"launch browser..."}
+{"ts":"2026-05-26T02:03:01.520Z","level":"OK","title":"PUPPETEER","message":"browser launched"}
+{"ts":"2026-05-26T02:03:01.568Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"PDF:PAGE_OPEN","detail":"create new page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:01.573Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"PDF:SET_CONTENT","detail":"html size 9.50 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:03.213Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"PDF:FONTS_READY","detail":"waiting document.fonts.ready","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:03.216Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"PDF:RENDER","detail":"format=A4 media=screen landscape=false","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:03.429Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"PDF:BUFFER_READY","detail":"pdf size 205 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:03.429Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"PDF:PAGE_CLOSE","detail":"close page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:03.443Z","level":"STEP","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","stage":"RESPOND_PDF","detail":"filename=tpr_invoice.pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:03:03.443Z","level":"PDF_RESPONSE","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","filename":"tpr_invoice.pdf","pdfBytes":209645}
+{"ts":"2026-05-26T02:03:03.446Z","level":"REQUEST_DONE","reqId":"MPLZQHOY-RL2OK4","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","status":200,"durationMs":2692,"responseSize":"205 KB"}
+{"ts":"2026-05-26T02:06:28.789Z","level":"STEP","reqId":"MPLZUY7P-X83OK4","route":"INVOICE","stage":"START","detail":"OPTIONS /tpr-invoice/pdf","method":"OPTIONS","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:28.790Z","level":"REQUEST_START","reqId":"MPLZUY7P-X83OK4","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:06:28.792Z","level":"REQUEST_DONE","reqId":"MPLZUY7P-X83OK4","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","status":204,"durationMs":3,"responseSize":"0 B"}
+{"ts":"2026-05-26T02:06:28.793Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"START","detail":"POST /tpr-invoice/pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:28.794Z","level":"REQUEST_START","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:06:28.795Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"ROUTE","detail":"pdf mode","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:28.796Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"NORMALIZE","detail":"payload 1.08 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:28.796Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"TEMPLATE","detail":"render html before pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:28.798Z","level":"INFO","title":"PUPPETEER","message":"reuse existing browser instance"}
+{"ts":"2026-05-26T02:06:28.878Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"PDF:PAGE_OPEN","detail":"create new page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:28.882Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"PDF:SET_CONTENT","detail":"html size 9.50 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:29.876Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"PDF:FONTS_READY","detail":"waiting document.fonts.ready","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:29.878Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"PDF:RENDER","detail":"format=A4 media=screen landscape=false","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:30.046Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"PDF:BUFFER_READY","detail":"pdf size 205 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:30.046Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"PDF:PAGE_CLOSE","detail":"close page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:30.061Z","level":"STEP","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","stage":"RESPOND_PDF","detail":"filename=tpr_invoice.pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:06:30.062Z","level":"PDF_RESPONSE","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","filename":"tpr_invoice.pdf","pdfBytes":209645}
+{"ts":"2026-05-26T02:06:30.064Z","level":"REQUEST_DONE","reqId":"MPLZUY7T-ROHGDI","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","status":200,"durationMs":1271,"responseSize":"205 KB"}
+{"ts":"2026-05-26T02:07:01.604Z","level":"STEP","reqId":"MPLZVNJ8-AR3R4B","route":"INVOICE","stage":"START","detail":"OPTIONS /tpr-invoice/pdf","method":"OPTIONS","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:01.605Z","level":"REQUEST_START","reqId":"MPLZVNJ8-AR3R4B","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:07:01.606Z","level":"REQUEST_DONE","reqId":"MPLZVNJ8-AR3R4B","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","status":204,"durationMs":2,"responseSize":"0 B"}
+{"ts":"2026-05-26T02:07:01.608Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"START","detail":"POST /tpr-invoice/pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:01.609Z","level":"REQUEST_START","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:07:01.610Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"ROUTE","detail":"pdf mode","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:01.610Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"NORMALIZE","detail":"payload 1.08 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:01.611Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"TEMPLATE","detail":"render html before pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:01.611Z","level":"INFO","title":"PUPPETEER","message":"reuse existing browser instance"}
+{"ts":"2026-05-26T02:07:01.658Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"PDF:PAGE_OPEN","detail":"create new page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:01.663Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"PDF:SET_CONTENT","detail":"html size 9.50 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:02.654Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"PDF:FONTS_READY","detail":"waiting document.fonts.ready","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:02.656Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"PDF:RENDER","detail":"format=A4 media=screen landscape=false","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:02.832Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"PDF:BUFFER_READY","detail":"pdf size 205 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:02.833Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"PDF:PAGE_CLOSE","detail":"close page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:02.846Z","level":"STEP","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","stage":"RESPOND_PDF","detail":"filename=tpr_invoice.pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:02.847Z","level":"PDF_RESPONSE","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","filename":"tpr_invoice.pdf","pdfBytes":209645}
+{"ts":"2026-05-26T02:07:02.849Z","level":"REQUEST_DONE","reqId":"MPLZVNJB-2UJDLS","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","status":200,"durationMs":1241,"responseSize":"205 KB"}
+{"ts":"2026-05-26T02:07:44.759Z","level":"STEP","reqId":"MPLZWKTZ-CCFF1N","route":"INVOICE","stage":"START","detail":"OPTIONS /tpr-invoice/pdf","method":"OPTIONS","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:44.760Z","level":"REQUEST_START","reqId":"MPLZWKTZ-CCFF1N","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:07:44.761Z","level":"REQUEST_DONE","reqId":"MPLZWKTZ-CCFF1N","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","status":204,"durationMs":1,"responseSize":"0 B"}
+{"ts":"2026-05-26T02:07:44.764Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"START","detail":"POST /tpr-invoice/pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:44.765Z","level":"REQUEST_START","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:07:44.767Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"ROUTE","detail":"pdf mode","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:44.768Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"NORMALIZE","detail":"payload 1.12 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:44.770Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"TEMPLATE","detail":"render html before pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:44.771Z","level":"INFO","title":"PUPPETEER","message":"reuse existing browser instance"}
+{"ts":"2026-05-26T02:07:44.820Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"PDF:PAGE_OPEN","detail":"create new page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:44.825Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"PDF:SET_CONTENT","detail":"html size 9.55 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:45.806Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"PDF:FONTS_READY","detail":"waiting document.fonts.ready","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:45.809Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"PDF:RENDER","detail":"format=A4 media=screen landscape=false","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:45.994Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"PDF:BUFFER_READY","detail":"pdf size 206 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:45.995Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"PDF:PAGE_CLOSE","detail":"close page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:46.012Z","level":"STEP","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","stage":"RESPOND_PDF","detail":"filename=tpr_invoice.pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:07:46.013Z","level":"PDF_RESPONSE","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","filename":"tpr_invoice.pdf","pdfBytes":211057}
+{"ts":"2026-05-26T02:07:46.015Z","level":"REQUEST_DONE","reqId":"MPLZWKU2-VO7KSZ","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","status":200,"durationMs":1252,"responseSize":"206 KB"}
+{"ts":"2026-05-26T02:11:36.694Z","level":"STEP","reqId":"MPM01JSL-6F96CP","route":"INVOICE","stage":"START","detail":"OPTIONS /tpr-invoice/pdf","method":"OPTIONS","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:36.694Z","level":"REQUEST_START","reqId":"MPM01JSL-6F96CP","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:11:36.696Z","level":"REQUEST_DONE","reqId":"MPM01JSL-6F96CP","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","status":204,"durationMs":3,"responseSize":"0 B"}
+{"ts":"2026-05-26T02:11:36.697Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"START","detail":"POST /tpr-invoice/pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:36.698Z","level":"REQUEST_START","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:11:36.699Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"ROUTE","detail":"pdf mode","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:36.700Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"NORMALIZE","detail":"payload 1.08 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:36.701Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"TEMPLATE","detail":"render html before pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:36.702Z","level":"INFO","title":"PUPPETEER","message":"reuse existing browser instance"}
+{"ts":"2026-05-26T02:11:36.745Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"PDF:PAGE_OPEN","detail":"create new page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:36.749Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"PDF:SET_CONTENT","detail":"html size 9.50 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:38.203Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"PDF:FONTS_READY","detail":"waiting document.fonts.ready","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:38.205Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"PDF:RENDER","detail":"format=A4 media=screen landscape=false","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:38.391Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"PDF:BUFFER_READY","detail":"pdf size 205 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:38.392Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"PDF:PAGE_CLOSE","detail":"close page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:38.404Z","level":"STEP","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","stage":"RESPOND_PDF","detail":"filename=tpr_invoice.pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:38.405Z","level":"PDF_RESPONSE","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","filename":"tpr_invoice.pdf","pdfBytes":209645}
+{"ts":"2026-05-26T02:11:38.406Z","level":"REQUEST_DONE","reqId":"MPM01JSP-YWE0QO","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","status":200,"durationMs":1709,"responseSize":"205 KB"}
+{"ts":"2026-05-26T02:11:43.466Z","level":"WARN","title":"SHUTDOWN","message":"received SIGINT, closing server resources...","signal":"SIGINT"}
+{"ts":"2026-05-26T02:11:43.467Z","level":"INFO","title":"PUPPETEER","message":"closing browser..."}
+{"ts":"2026-05-26T02:11:51.114Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_quotation.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_quotation.hbs"}
+{"ts":"2026-05-26T02:11:51.116Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_credit_note.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_credit_note.hbs"}
+{"ts":"2026-05-26T02:11:51.117Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_invoice.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_invoice.hbs"}
+{"ts":"2026-05-26T02:11:51.118Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_purchase_order.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_purchase_order.hbs"}
+{"ts":"2026-05-26T02:11:51.119Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_receipt.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_receipt.hbs"}
+{"ts":"2026-05-26T02:11:51.120Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_tax_receipt.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_tax_receipt.hbs"}
+{"ts":"2026-05-26T02:11:51.121Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_withholding_tax_certificate.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_withholding_tax_certificate.hbs"}
+{"ts":"2026-05-26T02:11:51.123Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_payment_voucher.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_payment_voucher.hbs"}
+{"ts":"2026-05-26T02:11:51.125Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_receipt_voucher.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_receipt_voucher.hbs"}
+{"ts":"2026-05-26T02:11:51.126Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_petty_cash_voucher.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_petty_cash_voucher.hbs"}
+{"ts":"2026-05-26T02:11:51.127Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_petty_cash_request.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_petty_cash_request.hbs"}
+{"ts":"2026-05-26T02:11:51.128Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_petty_cash_payment_report.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_petty_cash_payment_report.hbs"}
+{"ts":"2026-05-26T02:11:51.129Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_receipt_certification.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_receipt_certification.hbs"}
+{"ts":"2026-05-26T02:11:51.130Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_payroll_slip.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_payroll_slip.hbs"}
+{"ts":"2026-05-26T02:11:51.131Z","level":"WARN","title":"CSS","message":"inline missing: C:\\Projcet TPR\\report-server\\public\\css\\quotation.css (ไม่จำเป็นถ้า CSS อยู่ใน hbs แล้ว)","cssPath":"C:\\Projcet TPR\\report-server\\public\\css\\quotation.css"}
+{"ts":"2026-05-26T02:11:51.149Z","level":"OK","title":"READY","message":"PDF server is running","port":4100,"logFile":"C:\\Projcet TPR\\report-server\\logs\\server-2026-05-26.log"}
+{"ts":"2026-05-26T02:11:51.150Z","level":"BOOT","message":"PDF server is running","port":4100,"logFile":"C:\\Projcet TPR\\report-server\\logs\\server-2026-05-26.log"}
+{"ts":"2026-05-26T02:11:54.302Z","level":"STEP","reqId":"MPM01XDQ-Y5H49B","route":"INVOICE","stage":"START","detail":"OPTIONS /tpr-invoice/pdf","method":"OPTIONS","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:54.303Z","level":"REQUEST_START","reqId":"MPM01XDQ-Y5H49B","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:11:54.308Z","level":"REQUEST_DONE","reqId":"MPM01XDQ-Y5H49B","route":"INVOICE","method":"OPTIONS","url":"/tpr-invoice/pdf","status":204,"durationMs":5,"responseSize":"0 B"}
+{"ts":"2026-05-26T02:11:54.311Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"START","detail":"POST /tpr-invoice/pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:54.312Z","level":"REQUEST_START","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","ip":"::1","origin":"http://localhost:5174","ua":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","payloadBytes":2}
+{"ts":"2026-05-26T02:11:54.328Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"ROUTE","detail":"pdf mode","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:54.328Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"NORMALIZE","detail":"payload 1.08 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:54.330Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"TEMPLATE","detail":"render html before pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:54.359Z","level":"INFO","title":"PUPPETEER","message":"launch browser..."}
+{"ts":"2026-05-26T02:11:54.704Z","level":"OK","title":"PUPPETEER","message":"browser launched"}
+{"ts":"2026-05-26T02:11:54.747Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"PDF:PAGE_OPEN","detail":"create new page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:54.751Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"PDF:SET_CONTENT","detail":"html size 9.50 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:55.553Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"PDF:FONTS_READY","detail":"waiting document.fonts.ready","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:55.555Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"PDF:RENDER","detail":"format=A4 media=screen landscape=false","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:55.712Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"PDF:BUFFER_READY","detail":"pdf size 205 KB","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:55.712Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"PDF:PAGE_CLOSE","detail":"close page","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:55.723Z","level":"STEP","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","stage":"RESPOND_PDF","detail":"filename=tpr_invoice.pdf","method":"POST","url":"/tpr-invoice/pdf"}
+{"ts":"2026-05-26T02:11:55.724Z","level":"PDF_RESPONSE","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","filename":"tpr_invoice.pdf","pdfBytes":209645}
+{"ts":"2026-05-26T02:11:55.727Z","level":"REQUEST_DONE","reqId":"MPM01XDY-RVUWG4","route":"INVOICE","method":"POST","url":"/tpr-invoice/pdf","status":200,"durationMs":1416,"responseSize":"205 KB"}
+{"ts":"2026-05-26T10:57:05.338Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_quotation.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_quotation.hbs"}
+{"ts":"2026-05-26T10:57:05.341Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_credit_note.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_credit_note.hbs"}
+{"ts":"2026-05-26T10:57:05.342Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_invoice.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_invoice.hbs"}
+{"ts":"2026-05-26T10:57:05.343Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_purchase_order.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_purchase_order.hbs"}
+{"ts":"2026-05-26T10:57:05.344Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_receipt.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_receipt.hbs"}
+{"ts":"2026-05-26T10:57:05.346Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_tax_receipt.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_tax_receipt.hbs"}
+{"ts":"2026-05-26T10:57:05.347Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_withholding_tax_certificate.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_withholding_tax_certificate.hbs"}
+{"ts":"2026-05-26T10:57:05.348Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_payment_voucher.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_payment_voucher.hbs"}
+{"ts":"2026-05-26T10:57:05.349Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_receipt_voucher.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_receipt_voucher.hbs"}
+{"ts":"2026-05-26T10:57:05.350Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_petty_cash_voucher.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_petty_cash_voucher.hbs"}
+{"ts":"2026-05-26T10:57:05.351Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_petty_cash_request.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_petty_cash_request.hbs"}
+{"ts":"2026-05-26T10:57:05.351Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_petty_cash_payment_report.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_petty_cash_payment_report.hbs"}
+{"ts":"2026-05-26T10:57:05.352Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_receipt_certification.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_receipt_certification.hbs"}
+{"ts":"2026-05-26T10:57:05.353Z","level":"INFO","title":"TEMPLATE","message":"compile templates\\tpr_payroll_slip.hbs","templatePath":"C:\\Projcet TPR\\report-server\\templates\\tpr_payroll_slip.hbs"}
+{"ts":"2026-05-26T10:57:05.355Z","level":"WARN","title":"CSS","message":"inline missing: C:\\Projcet TPR\\report-server\\public\\css\\quotation.css (ไม่จำเป็นถ้า CSS อยู่ใน hbs แล้ว)","cssPath":"C:\\Projcet TPR\\report-server\\public\\css\\quotation.css"}
+{"ts":"2026-05-26T10:57:05.359Z","level":"LOG_CLEANUP","message":"old log deleted","file":"server-2026-05-12.log"}
+{"ts":"2026-05-26T10:57:05.377Z","level":"OK","title":"READY","message":"PDF server is running","port":4100,"logFile":"C:\\Projcet TPR\\report-server\\logs\\server-2026-05-26.log"}
+{"ts":"2026-05-26T10:57:05.377Z","level":"BOOT","message":"PDF server is running","port":4100,"logFile":"C:\\Projcet TPR\\report-server\\logs\\server-2026-05-26.log"}

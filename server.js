@@ -461,6 +461,12 @@ Handlebars.registerHelper("isZero", (v) => {
   return Number(v || 0) === 0;
 });
 
+// แปลง doc_type code เป็นชื่อภาษาไทย
+const DOC_TYPE_LABELS = { QT: "อ้างอิง QT", PO: "อ้างอิง PO", CT: "สัญญา", OTH: "อ้างอิง" };
+Handlebars.registerHelper("docTypeLabel", (v) => {
+  return DOC_TYPE_LABELS[v] || "อ้างอิง";
+});
+
 // =========================
 // Template compile (cache)
 // =========================
@@ -609,10 +615,8 @@ function computeQuotationSummary(items, discount = 0, withholdingRate = 0.03) {
   const withholding = round2(afterDiscount * Number(withholdingRate || 0));
   const net_total = round2(total - withholding);
 
-  const total_text = `รวมเป็นเงิน ${total.toLocaleString("th-TH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} บาทถ้วน`;
+  // แสดงจำนวนเงินเป็นตัวอักษรภาษาไทย เช่น "หนึ่งพันเจ็ดสิบบาทถ้วน"
+  const total_text = thaiBahtText(total);
 
   return {
     subtotal: round2(subtotal),
@@ -642,30 +646,13 @@ function computeCreditNoteSummary(originalTotal = 0, correctTotal = 0) {
 }
 
 // Invoice/Billing
-function computeInvoiceSummary(items, discount = 0, withholdingRate = 0.03) {
-  const subtotal = items.reduce((s, x) => s + Number(x.line_total || 0), 0);
-  const afterDiscount = subtotal - Number(discount || 0);
+function computeInvoiceSummary(items) {
+  const subtotal = round2(items.reduce((s, x) => s + Number(x.line_total || 0), 0));
+  const vat      = round2(subtotal * 0.07);
+  const total    = round2(subtotal + vat);
+  const total_text = thaiBahtText(total);
 
-  const vat = round2(afterDiscount * 0.07);
-  const total = round2(afterDiscount + vat);
-
-  const withholding = round2(afterDiscount * Number(withholdingRate || 0));
-  const net_total = round2(total - withholding);
-
-  const total_text = `รวมเป็นเงิน ${total.toLocaleString("th-TH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} บาทถ้วน`;
-
-  return {
-    subtotal: round2(subtotal),
-    discount: round2(discount),
-    vat,
-    total,
-    withholding,
-    net_total,
-    total_text,
-  };
+  return { subtotal, vat, total, total_text };
 }
 
 // Receipt
@@ -689,27 +676,20 @@ function computeReceiptSummary(items, deposit = 0) {
   };
 }
 
-// Tax receipt
-function computeTaxReceiptSummary(items, depositReturn = 0) {
-  const subtotal = items.reduce((s, x) => s + Number(x.line_total || 0), 0);
-  const depRet = round2(depositReturn || 0);
+// Tax receipt — ไม่มีหัก ณ ที่จ่าย, net_total = after_deposit + vat
+function computeTaxReceiptSummary(items, depositReturn = 0, vatOverride = null) {
+  const subtotal      = round2(items.reduce((s, x) => s + Number(x.line_total || 0), 0));
+  const depRet        = round2(depositReturn || 0);
   const after_deposit = round2(subtotal - depRet);
-
-  const vat = round2(after_deposit * 0.07);
-  const total = round2(after_deposit + vat);
-  const net_total = total;
-
-  const total_text = `รวมเป็นเงิน ${total.toLocaleString("th-TH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })} บาทถ้วน`;
+  const vat           = vatOverride !== null ? round2(Number(vatOverride)) : round2(after_deposit * 0.07);
+  const net_total     = round2(after_deposit + vat);
+  const total_text    = thaiBahtText(net_total);
 
   return {
-    subtotal: round2(subtotal),
+    subtotal,
     deposit_return: depRet,
     after_deposit,
     vat,
-    total,
     net_total,
     total_text,
   };
@@ -861,13 +841,13 @@ function normalizeQuotationPayload(payload) {
       date: payload?.doc?.date || payload?.docDate || "10/01/2026",
       due_date: payload?.doc?.due_date || payload?.dueDate || "",
       valid_until: payload?.doc?.valid_until || payload?.validUntil || "24/01/2026",
+      prepared_by: payload?.doc?.prepared_by || payload?.prepared_by || "",
+      project_name: payload?.doc?.project_name || payload?.project_name || "",
+      approver_name: payload?.doc?.approver_name || payload?.approver_name || "",
     },
     customer: normalizeCustomer(payload),
     terms: {
-      bank_note:
-        payload?.terms?.bank_note ||
-        payload?.bankNote ||
-        "โอนเงินเข้าบัญชี ธนาคารกสิกรไทย สาขา ลาดพร้าว\nชื่อบัญชี บริษัท ตัวอย่าง จำกัด\nเลขที่บัญชี 023-2-67749-0",
+      bank_note: payload?.terms?.bank_note || payload?.bankNote || "",
     },
     items,
     summary,
@@ -920,27 +900,41 @@ function normalizeCreditNotePayload(payload) {
 }
 
 function normalizeInvoicePayload(payload) {
-  const items = normalizeItems(payload);
-  const discount = Number(payload?.discount || 0);
-  const withholdingRate = payload?.withholding_rate ?? 0.03;
-  const summary = computeInvoiceSummary(items, discount, withholdingRate);
+  const items   = normalizeItems(payload);
+  const summary = computeInvoiceSummary(items);
+
+  // ref_docs: รองรับทั้ง array ใหม่ และ quotation_no เดิม
+  const rawDocs = Array.isArray(payload?.ref?.docs) ? payload.ref.docs
+    : Array.isArray(payload?.ref_docs) ? payload.ref_docs
+    : [];
+  const filteredDocs = rawDocs.filter(r => r?.doc_no?.trim());
+
+  const legacyQtNo = payload?.ref?.quotation_no
+    || payload?.refQuotationNo
+    || payload?.quotation_no
+    || payload?.quotationNo
+    || "";
+
+  // ถ้าไม่มี ref_docs ให้สร้างจาก quotation_no เดิม
+  const docs = filteredDocs.length > 0
+    ? filteredDocs
+    : (legacyQtNo ? [{ doc_type: "QT", doc_no: legacyQtNo }] : []);
 
   const ref = {
-    quotation_no:
-      payload?.ref?.quotation_no ||
-      payload?.refQuotationNo ||
-      payload?.quotation_no ||
-      payload?.quotationNo ||
-      "",
+    quotation_no: docs.find(r => r.doc_type === "QT")?.doc_no || legacyQtNo || "",
+    // กรอง QT ออกจาก loop "อ้างอิงเอกสาร" เพราะแสดงแยกใน "อ้างอิง QT" แล้ว
+    docs: docs.filter(r => r.doc_type !== "QT"),
   };
 
   return {
     css_inline: cssInline,
     company: normalizeCompany(payload),
     doc: {
-      number: payload?.doc?.number || payload?.docNumber || "IV-DEV-0001",
-      date: payload?.doc?.date || payload?.docDate || "10/01/2026",
-      due_date: payload?.doc?.due_date || payload?.dueDate || "",
+      number:       payload?.doc?.number       || payload?.docNumber || "IV-DEV-0001",
+      date:         payload?.doc?.date         || payload?.docDate   || "10/01/2026",
+      due_date:     payload?.doc?.due_date     || payload?.dueDate   || "",
+      prepared_by:  payload?.doc?.prepared_by  || "",
+      project_name: payload?.doc?.project_name || "",
     },
     customer: normalizeCustomer(payload),
     ref,
@@ -1035,29 +1029,33 @@ function normalizePurchaseOrderPayload(payload) {
 
 function normalizeReceiptPayload(payload) {
   const items = normalizeItems(payload);
-  const deposit_return = Number(
-    payload?.deposit_return || payload?.summary?.deposit_return ||
-    payload?.deposit        || payload?.summary?.deposit        || 0
-  );
-  const raw = computeReceiptSummary(items, deposit_return);
+  const subtotal  = round2(items.reduce((s, x) => s + Number(x.line_total || 0), 0));
+  // ใช้ vat_amount จาก payload ก่อน (ส่งมาจาก ReceiptReport.js) แล้วค่อย fallback คำนวณ 7%
+  const vatRaw    = payload?.summary?.vat_amount ?? payload?.summary?.vat ?? null;
+  const vat_amount = vatRaw !== null ? round2(Number(vatRaw)) : round2(subtotal * 0.07);
+  const net_total = round2(subtotal + vat_amount);
+  const total_text = payload?.summary?.total_text || thaiBahtText(net_total);
 
-  // map ให้ตรง template variable (summary.total, summary.deposit_return)
   const summary = {
-    total:          raw.subtotal,
-    deposit_return: raw.deposit,
-    after_deposit:  raw.after_deposit,
-    net_total:      raw.net_total,
-    total_text:     raw.total_text,
+    total:      subtotal,
+    vat_amount,
+    net_total,
+    total_text,
   };
 
   return {
     css_inline: cssInline,
     company: normalizeCompany(payload),
     doc: {
-      number: payload?.doc?.number || payload?.docNumber || "RC-DEV-0001",
-      date: payload?.doc?.date || payload?.docDate || "10/01/2026",
+      number:       payload?.doc?.number       || payload?.docNumber || "RC-DEV-0001",
+      date:         payload?.doc?.date         || payload?.docDate   || "10/01/2026",
+      prepared_by:  payload?.doc?.prepared_by  || "",
+      project_name: payload?.doc?.project_name || "",
     },
     customer: normalizeCustomer(payload),
+    ref: {
+      invoice_no: payload?.ref?.invoice_no || "",
+    },
     note: payload?.note || "",
     items,
     summary,
@@ -1067,21 +1065,27 @@ function normalizeReceiptPayload(payload) {
 function normalizeTaxReceiptPayload(payload) {
   const items = normalizeItems(payload);
   const deposit_return = Number(
-    payload?.deposit_return || payload?.depositReturn || payload?.summary?.deposit_return || 0
+    payload?.summary?.deposit_return ?? payload?.deposit_return ?? payload?.depositReturn ?? 0
   );
-  const summary = computeTaxReceiptSummary(items, deposit_return);
+  // ใช้ vat_amount จาก payload ถ้ามี ไม่งั้นคำนวณ 7%
+  const vatOverride =
+    payload?.summary?.vat != null    ? payload.summary.vat :
+    payload?.summary?.vat_amount != null ? payload.summary.vat_amount :
+    null;
+  const summary = computeTaxReceiptSummary(items, deposit_return, vatOverride);
 
   const ref = {
-    billing_no: payload?.ref?.billing_no || payload?.refBillingNo || payload?.ref?.billingNo || "",
-    billing_date: payload?.ref?.billing_date || payload?.refBillingDate || payload?.ref?.billingDate || "",
+    receipt_no:   payload?.ref?.receipt_no   || payload?.ref?.billing_no   || "",
+    receipt_date: payload?.ref?.receipt_date || payload?.ref?.billing_date || "",
   };
 
   return {
     css_inline: cssInline,
     company: normalizeCompany(payload),
     doc: {
-      number: payload?.doc?.number || payload?.docNumber || "TR-DEV-0001",
-      date: payload?.doc?.date || payload?.docDate || "10/01/2026",
+      number:      payload?.doc?.number      || payload?.docNumber || "TR-DEV-0001",
+      date:        payload?.doc?.date        || payload?.docDate   || "10/01/2026",
+      prepared_by: payload?.doc?.prepared_by || "",
     },
     customer: normalizeCustomer(payload),
     ref,

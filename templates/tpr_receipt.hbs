@@ -15,6 +15,7 @@
       line-height: 1.25;
     }
     .page { width: 100%; }
+    .page-content { padding-bottom: 110px; }
 
     /* ===== Header (เหมือนใบแจ้งหนี้/ใบวางบิล) ===== */
     .topbar {
@@ -134,14 +135,18 @@
       background: #e9e9e9;
     }
 
-    /* ===== Signatures (เหมือนใบแจ้งหนี้/ใบวางบิล) ===== */
+    /* ===== Signatures (fixed bottom เหมือนใบแจ้งหนี้/ใบวางบิล) ===== */
     .sign-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 40px;
-      margin-top: 38px;
       align-items: end;
       page-break-inside: avoid;
+      position: fixed;
+      bottom: 20mm;
+      left: 0;
+      right: 0;
+      padding: 0 14px;
     }
     .sign-col { text-align: center; }
     .sign-label { font-size: 12px; margin-bottom: 6px; }
@@ -162,6 +167,7 @@
 
 <body>
   <div class="page">
+  <div class="page-content">
 
     <!-- Header -->
     <div class="topbar">
@@ -201,10 +207,18 @@
         </div>
       </div>
 
-      <!-- ✅ ไม่มีการอ้างอิงเอกสาร -->
       <div class="docmeta">
         <div class="kv"><span class="k">เลขที่เอกสาร</span><span class="v">{{doc.number}}</span></div>
         <div class="kv"><span class="k">วันที่เอกสาร</span><span class="v">{{doc.date}}</span></div>
+        {{#if doc.prepared_by}}
+        <div class="kv"><span class="k">ผู้จัดทำ</span><span class="v">{{doc.prepared_by}}</span></div>
+        {{/if}}
+        {{#if doc.project_name}}
+        <div class="kv"><span class="k">ชื่องาน / โครงการ</span><span class="v">{{doc.project_name}}</span></div>
+        {{/if}}
+        {{#if ref.invoice_no}}
+        <div class="kv"><span class="k">อ้างอิงใบแจ้งหนี้</span><span class="v">{{ref.invoice_no}}</span></div>
+        {{/if}}
       </div>
     </div>
 
@@ -253,7 +267,7 @@
 
       <tbody>
         <tr>
-          <td class="note-cell" colspan="3" rowspan="4">
+          <td class="note-cell" colspan="3" rowspan="3">
             <div class="note-title">หมายเหตุ :</div>
             {{#if note}}
             <div class="note-text">{{note}}</div>
@@ -262,25 +276,17 @@
             {{/if}}
           </td>
 
-          <!-- ✅ สรุปฝั่งขวาแบบใบเสร็จ -->
-          <td class="sum-label right">รวมเงิน</td>
+          <td class="sum-label right">รวม</td>
           <td class="sum-value right">{{#if summary.total}}{{money summary.total}}{{else}}-{{/if}}</td>
         </tr>
 
         <tr>
-          <td class="sum-label right">หักคืนเงินจำ</td>
-          <td class="sum-value right">
-            {{#if summary.deposit_return}}-{{money summary.deposit_return}}{{else}}-{{/if}}
-          </td>
+          <td class="sum-label right">ภาษีมูลค่าเพิ่ม 7%</td>
+          <td class="sum-value right">{{#if summary.vat_amount}}{{money summary.vat_amount}}{{else}}-{{/if}}</td>
         </tr>
 
         <tr>
-          <td class="sum-label right">มูลค่าสินค้าหลังหักเงินจำ</td>
-          <td class="sum-value right">{{#if summary.after_deposit}}{{money summary.after_deposit}}{{else}}-{{/if}}</td>
-        </tr>
-
-        <tr>
-          <td class="sum-label right"><strong>ยอดเงินสุทธิ</strong></td>
+          <td class="sum-label right"><strong>รวมทั้งสิ้น</strong></td>
           <td class="sum-value right"><strong>{{#if summary.net_total}}{{money summary.net_total}}{{else}}-{{/if}}</strong></td>
         </tr>
 
@@ -292,7 +298,9 @@
       </tbody>
     </table>
 
-    <!-- Signatures (เหมือนใบแจ้งหนี้/ใบวางบิล) -->
+  </div><!-- /.page-content -->
+
+    <!-- Signatures fixed bottom -->
     <div class="sign-row">
       <div class="sign-col">
         <div class="sign-label">ได้รับสินค้าตามรายการข้างบนเรียบร้อย<br />ผู้รับสินค้า</div>
@@ -313,7 +321,7 @@
       </div>
     </div>
 
-  </div>
+  </div><!-- /.page -->
 </body>
 
 </html>
