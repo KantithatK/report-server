@@ -1731,6 +1731,23 @@ function normalizePayrollSlipPayload(payload) {
 // =========================
 let _browser = null;
 
+// ── Inline font CSS (loaded once, injected into every HTML before PDF render)
+// เหตุผล: page.setContent() ไม่มี base URL ทำให้ <link href="/fonts/..."> resolve ไม่ได้
+let _fontCssInline = null;
+function getFontCssInline() {
+  if (_fontCssInline !== null) return _fontCssInline;
+  const fontPath = path.join(__dirname, "public", "fonts", "th-sarabun-new.css");
+  try {
+    const css = fs.readFileSync(fontPath, "utf8");
+    _fontCssInline = `<style id="__embedded_fonts__">\n${css}\n</style>`;
+    logInfo("FONT", `embedded font CSS loaded (${formatBytes(Buffer.byteLength(css, "utf8"))})`);
+  } catch (e) {
+    _fontCssInline = "";
+    logWarn("FONT", `font CSS not found: ${e.message}`);
+  }
+  return _fontCssInline;
+}
+
 async function ensureBrowser() {
   if (_browser) {
     logInfo("PUPPETEER", "reuse existing browser instance");
@@ -1765,8 +1782,14 @@ async function htmlToPdfBuffer(html, opts = {}, req = null) {
     await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
     await page.emulateMediaType(mediaType);
 
-    logStep("PDF:SET_CONTENT", `html size ${formatBytes(Buffer.byteLength(html || "", "utf8"))}`);
-    await page.setContent(html, { waitUntil: ["domcontentloaded", "networkidle0"] });
+    // Inject embedded font CSS inline (แทน <link href="/fonts/..."> ที่ Puppeteer resolve ไม่ได้)
+    const fontTag = getFontCssInline();
+    const htmlWithFont = fontTag
+      ? html.replace(/<link[^>]*th-sarabun-new\.css[^>]*>/gi, "").replace("</head>", `${fontTag}\n</head>`)
+      : html;
+
+    logStep("PDF:SET_CONTENT", `html size ${formatBytes(Buffer.byteLength(htmlWithFont || "", "utf8"))}`);
+    await page.setContent(htmlWithFont, { waitUntil: ["domcontentloaded", "networkidle0"] });
 
     logStep("PDF:FONTS_READY", "waiting document.fonts.ready");
     await page.evaluateHandle("document.fonts.ready");
