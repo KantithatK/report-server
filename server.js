@@ -418,6 +418,13 @@ app.use(
     origin: (origin, cb) => {
       if (!origin) return cb(null, true);
       if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true);
+      if (/\.vercel\.app$/.test(origin)) return cb(null, true);
+      if (/\.onrender\.com$/.test(origin)) return cb(null, true);
+      const allowed = (process.env.ALLOWED_ORIGINS || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (allowed.includes(origin)) return cb(null, true);
       return cb(new Error("Not allowed by CORS: " + origin));
     },
     credentials: true,
