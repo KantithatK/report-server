@@ -1782,14 +1782,20 @@ async function htmlToPdfBuffer(html, opts = {}, req = null) {
     await page.setViewport({ width: 1240, height: 1754, deviceScaleFactor: 2 });
     await page.emulateMediaType(mediaType);
 
-    // Inject embedded font CSS inline (แทน <link href="/fonts/..."> ที่ Puppeteer resolve ไม่ได้)
-    const fontTag = getFontCssInline();
-    const htmlWithFont = fontTag
-      ? html.replace(/<link[^>]*th-sarabun-new\.css[^>]*>/gi, "").replace("</head>", `${fontTag}\n</head>`)
-      : html;
+    // ลบ <link> tag ของ font ออกจาก HTML (จะ inject ผ่าน addStyleTag แทน)
+    const htmlClean = html.replace(/<link[^>]*th-sarabun-new\.css[^>]*>/gi, "");
 
-    logStep("PDF:SET_CONTENT", `html size ${formatBytes(Buffer.byteLength(htmlWithFont || "", "utf8"))}`);
-    await page.setContent(htmlWithFont, { waitUntil: ["domcontentloaded", "networkidle0"] });
+    logStep("PDF:SET_CONTENT", `html size ${formatBytes(Buffer.byteLength(htmlClean || "", "utf8"))}`);
+    await page.setContent(htmlClean, { waitUntil: "domcontentloaded", timeout: 60000 });
+
+    // Inject font CSS หลัง setContent เพื่อหลีกเลี่ยง timeout จาก HTML ขนาดใหญ่
+    const fontCss = getFontCssInline();
+    if (fontCss) {
+      // getFontCssInline คืน <style> tag — ดึงแค่ CSS content ออกมา
+      const cssContent = fontCss.replace(/<style[^>]*>/, "").replace(/<\/style>/, "");
+      await page.addStyleTag({ content: cssContent });
+      logStep("PDF:FONTS_INJECT", "font CSS injected via addStyleTag");
+    }
 
     logStep("PDF:FONTS_READY", "waiting document.fonts.ready");
     await page.evaluateHandle("document.fonts.ready");
