@@ -8,16 +8,14 @@ const puppeteer = require("puppeteer");
 const Handlebars = require("handlebars");
 const cors = require("cors");
 
-// Install Chrome if not found (required on Render / cloud environments)
+// Ensure Chrome is installed (required on Render / cloud environments)
+// npx puppeteer browsers install chrome is idempotent — safe to run every startup
 try {
-  const chromePath = puppeteer.executablePath();
-  if (!fs.existsSync(chromePath)) {
-    console.log("[BOOT] Chrome not found, installing via puppeteer...");
-    execSync("npx puppeteer browsers install chrome", { stdio: "inherit" });
-    console.log("[BOOT] Chrome installed successfully");
-  }
+  console.log("[BOOT] Ensuring Chrome is installed...");
+  execSync("npx puppeteer browsers install chrome", { stdio: "inherit" });
+  console.log("[BOOT] Chrome ready");
 } catch (e) {
-  console.log("[BOOT] Chrome check/install:", e.message);
+  console.error("[BOOT] Chrome install failed:", e.message);
 }
 
 const app = express();
