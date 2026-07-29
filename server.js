@@ -663,16 +663,6 @@ function computeCreditNoteSummary(originalTotal = 0, correctTotal = 0) {
   };
 }
 
-// Invoice/Billing
-function computeInvoiceSummary(items) {
-  const subtotal = round2(items.reduce((s, x) => s + Number(x.line_total || 0), 0));
-  const vat      = round2(subtotal * 0.07);
-  const total    = round2(subtotal + vat);
-  const total_text = thaiBahtText(total);
-
-  return { subtotal, vat, total, total_text };
-}
-
 // Receipt
 function computeReceiptSummary(items, deposit = 0) {
   const subtotal = items.reduce((s, x) => s + Number(x.line_total || 0), 0);
@@ -729,6 +719,8 @@ function normalizeCompany(payload) {
     address: payload?.company?.address || "99/1 ถนนสุขุมวิท แขวงบางนา เขตบางนา กรุงเทพฯ 10260",
     tax_id: payload?.company?.tax_id || "010555xxxxx",
     phone: payload?.company?.phone || "02-xxx-xxxx",
+    mobile: payload?.company?.mobile || "",
+    website: payload?.company?.website || "",
     fax: payload?.company?.fax || payload?.company?.fax_no || payload?.company?.faxNo || payload?.fax || "",
     email: payload?.company?.email || "info@tprgs.co.th",
   };
@@ -769,15 +761,17 @@ function normalizeItems(payload) {
   const rawItems = Array.isArray(payload?.items) ? payload.items : [];
   return rawItems.map((it, idx) => {
     const qty = Number(it?.qty || 0);
-    const price = Number(it?.price || 0);
+    const price = Number((it?.price ?? it?.unit_price) || 0);
+    const lineTotal = it?.line_total ?? it?.amount ?? (qty * price);
     return {
       no: idx + 1,
-      name: it?.name || "-",
-      description: it?.description || "",
+      name: it?.name || it?.item_name || "-",
+      description: it?.description || it?.detail || it?.details || it?.desc || "",
       qty,
       unit: it?.unit || "รายการ",
       price,
-      line_total: round2(qty * price),
+      discount_display: it?.discount_display || "-",
+      line_total: round2(lineTotal),
     };
   });
 }
@@ -847,9 +841,37 @@ function computeWithholdingTaxCertificateSummary(incomeRows, payloadSummary = {}
 
 function normalizeQuotationPayload(payload) {
   const items = normalizeItems(payload);
-  const discount = Number(payload?.discount || 0);
-  const withholdingRate = payload?.withholding_rate ?? 0.03;
-  const summary = computeQuotationSummary(items, discount, withholdingRate);
+  const discount = Number(payload?.discount || payload?.summary?.discount || 0);
+  const normalizeRate = (value) => {
+    const n = Number(value || 0);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return n > 1 ? n / 100 : n;
+  };
+  const withholdingRate =
+    normalizeRate(payload?.withholding_rate ?? payload?.summary?.withholding_rate) ||
+    normalizeRate(payload?.wht_percent ?? payload?.summary?.wht_percent) ||
+    (payload?.summary?.wht_enabled ? Number(payload?.summary?.withholding || 0) / Math.max(Number(payload?.summary?.subtotal || 0), 1) : 0.03);
+  const computedSummary = computeQuotationSummary(items, discount, withholdingRate);
+  const payloadSummary = payload?.summary || {};
+  const withholdingPercent = withholdingRate > 0 ? round2(withholdingRate * 100) : 0;
+  const withholdingPercentDisplay = withholdingPercent > 0
+    ? withholdingPercent.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
+  const summary = {
+    subtotal: round2(payloadSummary?.subtotal ?? computedSummary.subtotal),
+    discount: round2(payloadSummary?.discount ?? computedSummary.discount),
+    vat: round2(payloadSummary?.vat ?? computedSummary.vat),
+    total: round2(payloadSummary?.total ?? computedSummary.total),
+    withholding: round2(payloadSummary?.withholding ?? computedSummary.withholding),
+    net_total: round2(payloadSummary?.net_total ?? computedSummary.net_total),
+    withholding_rate: withholdingRate,
+    wht_percent: withholdingPercent,
+    withholding_percent_display: withholdingPercentDisplay,
+    vat_enabled: payloadSummary?.vat_enabled !== false,
+    wht_enabled: !!payloadSummary?.wht_enabled,
+    total_text: payloadSummary?.total_text || computedSummary.total_text,
+  };
+  summary.rowspan = 2 + (summary.vat_enabled ? 1 : 0) + (summary.wht_enabled ? 2 : 0);
 
   return {
     css_inline: cssInline,
@@ -859,11 +881,19 @@ function normalizeQuotationPayload(payload) {
       date: payload?.doc?.date || payload?.docDate || "10/01/2026",
       due_date: payload?.doc?.due_date || payload?.dueDate || "",
       valid_until: payload?.doc?.valid_until || payload?.validUntil || "24/01/2026",
+      credit_days: payload?.doc?.credit_days ?? payload?.creditDays ?? null,
       prepared_by: payload?.doc?.prepared_by || payload?.prepared_by || "",
       project_name: payload?.doc?.project_name || payload?.project_name || "",
       approver_name: payload?.doc?.approver_name || payload?.approver_name || "",
+      reference_no: payload?.doc?.reference_no || payload?.reference_no || "",
     },
     customer: normalizeCustomer(payload),
+    contact: {
+      name: payload?.contact?.name || payload?.contact_name || "",
+      title: payload?.contact?.title || payload?.contact_title || "",
+      phone: payload?.contact?.phone || payload?.contact_phone || "",
+      email: payload?.contact?.email || payload?.contact_email || "",
+    },
     terms: {
       bank_note: payload?.terms?.bank_note || payload?.bankNote || "",
     },
@@ -918,8 +948,45 @@ function normalizeCreditNotePayload(payload) {
 }
 
 function normalizeInvoicePayload(payload) {
-  const items   = normalizeItems(payload);
-  const summary = computeInvoiceSummary(items);
+  const items = normalizeItems(payload);
+  const discount = Number(payload?.discount || payload?.summary?.discount || 0);
+  const normalizeCreditDays = (value) => {
+    if (value == null || value === "") return null;
+    const text = String(value).trim();
+    const match = text.match(/\d+/);
+    return match ? Number(match[0]) : text;
+  };
+  const payloadContact = payload?.contact || payload?.doc?.contact || {};
+  const normalizeRate = (value) => {
+    const n = Number(value || 0);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return n > 1 ? n / 100 : n;
+  };
+  const withholdingRate =
+    normalizeRate(payload?.withholding_rate ?? payload?.summary?.withholding_rate) ||
+    normalizeRate(payload?.wht_percent ?? payload?.summary?.wht_percent) ||
+    (payload?.summary?.wht_enabled ? Number(payload?.summary?.withholding || 0) / Math.max(Number(payload?.summary?.subtotal || 0), 1) : 0.03);
+  const computedSummary = computeQuotationSummary(items, discount, withholdingRate);
+  const payloadSummary = payload?.summary || {};
+  const withholdingPercent = withholdingRate > 0 ? round2(withholdingRate * 100) : 0;
+  const withholdingPercentDisplay = withholdingPercent > 0
+    ? withholdingPercent.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
+  const summary = {
+    subtotal: round2(payloadSummary?.subtotal ?? computedSummary.subtotal),
+    discount: round2(payloadSummary?.discount ?? computedSummary.discount),
+    vat: round2(payloadSummary?.vat ?? computedSummary.vat),
+    total: round2(payloadSummary?.total ?? computedSummary.total),
+    withholding: round2(payloadSummary?.withholding ?? computedSummary.withholding),
+    net_total: round2(payloadSummary?.net_total ?? computedSummary.net_total),
+    withholding_rate: withholdingRate,
+    wht_percent: withholdingPercent,
+    withholding_percent_display: withholdingPercentDisplay,
+    vat_enabled: payloadSummary?.vat_enabled !== false,
+    wht_enabled: !!payloadSummary?.wht_enabled,
+    total_text: payloadSummary?.total_text || computedSummary.total_text,
+  };
+  summary.rowspan = 2 + (summary.vat_enabled ? 1 : 0) + (summary.wht_enabled ? 2 : 0);
 
   // ref_docs: รองรับทั้ง array ใหม่ และ quotation_no เดิม
   const rawDocs = Array.isArray(payload?.ref?.docs) ? payload.ref.docs
@@ -951,10 +1018,18 @@ function normalizeInvoicePayload(payload) {
       number:       payload?.doc?.number       || payload?.docNumber || "IV-DEV-0001",
       date:         payload?.doc?.date         || payload?.docDate   || "10/01/2026",
       due_date:     payload?.doc?.due_date     || payload?.dueDate   || "",
+      credit_days:  normalizeCreditDays(payload?.doc?.credit_days ?? payload?.creditDays ?? null),
       prepared_by:  payload?.doc?.prepared_by  || "",
       project_name: payload?.doc?.project_name || "",
+      reference_no: payload?.doc?.reference_no || payload?.reference_no || "",
     },
     customer: normalizeCustomer(payload),
+    contact: {
+      name: payloadContact?.name || payload?.doc?.contact_name || payload?.contact_name || "",
+      title: payloadContact?.title || payload?.doc?.contact_title || payload?.contact_title || "",
+      phone: payloadContact?.phone || payload?.doc?.contact_phone || payload?.contact_phone || "",
+      email: payloadContact?.email || payload?.doc?.contact_email || payload?.contact_email || "",
+    },
     ref,
     note: payload?.note || "",
     items,
@@ -1004,8 +1079,8 @@ function normalizePurchaseOrderPayload(payload) {
       due_date: payload?.doc?.due_date || payload?.dueDate || payload?.doc?.dueDate || "",
       buyer: payload?.doc?.buyer || payload?.buyer || payload?.purchaser || "",
       project_name: payload?.doc?.project_name || payload?.project_name || payload?.projectName || "",
-      contact_name: payload?.doc?.contact_name || payload?.contact_name || payload?.contactName || "",
-      contact_phone: payload?.doc?.contact_phone || payload?.contact_phone || payload?.contactPhone || "",
+      quotation_no: payload?.doc?.quotation_no || payload?.quotation_no || payload?.quotationNo || "",
+      ref_docs: Array.isArray(payload?.ref_docs) ? payload.ref_docs.filter(r => r.doc_no?.trim()) : [],
       copy_label: payload?.doc?.copy_label || payload?.copy_label || payload?.copyLabel || "ต้นฉบับ",
     },
     vendor: normalizeVendor(payload),
@@ -1082,31 +1157,105 @@ function normalizeReceiptPayload(payload) {
 
 function normalizeTaxReceiptPayload(payload) {
   const items = normalizeItems(payload);
-  const deposit_return = Number(
-    payload?.summary?.deposit_return ?? payload?.deposit_return ?? payload?.depositReturn ?? 0
+  const payloadSummary = payload?.summary || {};
+  const deposit_return = round2(
+    payloadSummary?.deposit_return ?? payload?.deposit_return ?? payload?.depositReturn ?? 0
   );
   // ใช้ vat_amount จาก payload ถ้ามี ไม่งั้นคำนวณ 7%
   const vatOverride =
-    payload?.summary?.vat != null    ? payload.summary.vat :
-    payload?.summary?.vat_amount != null ? payload.summary.vat_amount :
+    payloadSummary?.vat != null        ? payloadSummary.vat :
+    payloadSummary?.vat_amount != null ? payloadSummary.vat_amount :
     null;
-  const summary = computeTaxReceiptSummary(items, deposit_return, vatOverride);
+  const computedSummary = computeTaxReceiptSummary(items, deposit_return, vatOverride);
+
+  const subtotal       = round2(payloadSummary?.subtotal ?? computedSummary.subtotal);
+  const discount_total = round2(payloadSummary?.discount_total ?? 0);
+  const after_discount = round2(payloadSummary?.after_discount ?? Math.max(subtotal - discount_total, 0));
+  const vatEnabled      = payloadSummary?.vat_enabled !== false;
+  const after_deposit   = round2(payloadSummary?.after_deposit
+    ?? (deposit_return > 0 ? Math.max(after_discount - deposit_return, 0) : after_discount));
+  const vat    = round2(payloadSummary?.vat ?? computedSummary.vat);
+  const total  = round2(payloadSummary?.total ?? round2(after_deposit + (vatEnabled ? vat : 0)));
+
+  // รายการปรับลด/ปรับเพิ่มระดับเอกสาร — ปรับหลัง "รวมทั้งสิ้น" ก่อนหัก ณ ที่จ่าย
+  const adjustmentEnabled = !!payloadSummary?.adjustment_enabled;
+  const adjustmentAmount  = adjustmentEnabled ? round2(payloadSummary?.adjustment_amount ?? 0) : 0;
+  const afterAdjustment   = round2(payloadSummary?.after_adjustment ?? round2(total + adjustmentAmount));
+
+  const normalizeRate = (value) => {
+    const n = Number(value || 0);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return n > 1 ? n / 100 : n;
+  };
+  const withholdingRate = normalizeRate(payloadSummary?.withholding_rate ?? payloadSummary?.wht_percent);
+  const whtEnabled = !!payloadSummary?.wht_enabled && withholdingRate > 0;
+  const withholdingPercent = withholdingRate > 0 ? round2(withholdingRate * 100) : 0;
+  const withholdingPercentDisplay = withholdingPercent > 0
+    ? withholdingPercent.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
+  const withholding = round2(payloadSummary?.withholding ?? (whtEnabled ? afterAdjustment * withholdingRate : 0));
+  const net_total = round2(payloadSummary?.net_total ?? (whtEnabled ? afterAdjustment - withholding : afterAdjustment));
+
+  const summary = {
+    subtotal,
+    discount_total,
+    after_discount,
+    deposit_return,
+    after_deposit,
+    vat_enabled: vatEnabled,
+    vat,
+    total,
+    adjustment_enabled: adjustmentEnabled,
+    adjustment_label:   payloadSummary?.adjustment_label || "",
+    adjustment_amount:  adjustmentAmount,
+    after_adjustment:   afterAdjustment,
+    wht_enabled: whtEnabled,
+    withholding,
+    withholding_rate: withholdingRate,
+    wht_percent: withholdingPercent,
+    withholding_percent_display: withholdingPercentDisplay,
+    net_total,
+    // จำนวนเงินเป็นตัวอักษร — ระบุยอด "รวมทั้งสิ้น" (ก่อนหัก ณ ที่จ่าย) ตามหลักใบกำกับภาษี ไม่ใช่ยอดชำระสุทธิ
+    total_text: payloadSummary?.total_text || thaiBahtText(total),
+  };
+
+  const payloadContact = payload?.contact || payload?.doc?.contact || {};
 
   const ref = {
     receipt_no:   payload?.ref?.receipt_no   || payload?.ref?.billing_no   || "",
     receipt_date: payload?.ref?.receipt_date || payload?.ref?.billing_date || "",
+    invoice_no:   payload?.ref?.invoice_no   || "",
   };
+
+  const paymentRaw = payload?.payment || null;
+  const payment = paymentRaw ? {
+    method:      paymentRaw.method || "",
+    is_cheque:   !!paymentRaw.is_cheque,
+    date:        paymentRaw.date || "",
+    amount:      round2(paymentRaw.amount || 0),
+    bank_name:   paymentRaw.bank_name || "",
+    cheque_no:   paymentRaw.cheque_no || "",
+    cheque_date: paymentRaw.cheque_date || "",
+  } : null;
 
   return {
     css_inline: cssInline,
     company: normalizeCompany(payload),
     doc: {
-      number:      payload?.doc?.number      || payload?.docNumber || "TR-DEV-0001",
-      date:        payload?.doc?.date        || payload?.docDate   || "10/01/2026",
-      prepared_by: payload?.doc?.prepared_by || "",
+      number:       payload?.doc?.number       || payload?.docNumber || "TR-DEV-0001",
+      date:         payload?.doc?.date         || payload?.docDate   || "10/01/2026",
+      prepared_by:  payload?.doc?.prepared_by  || "",
+      project_name: payload?.doc?.project_name || "",
     },
     customer: normalizeCustomer(payload),
+    contact: {
+      name:  payloadContact?.name  || "",
+      title: payloadContact?.title || "",
+      phone: payloadContact?.phone || "",
+      email: payloadContact?.email || "",
+    },
     ref,
+    payment,
     note: payload?.note || "",
     items,
     summary,
@@ -1799,6 +1948,19 @@ async function htmlToPdfBuffer(html, opts = {}, req = null) {
 
     logStep("PDF:FONTS_READY", "waiting document.fonts.ready");
     await page.evaluateHandle("document.fonts.ready");
+
+    logStep("PDF:IMAGES_READY", "waiting document images");
+    await page.evaluate(async () => {
+      const images = Array.from(document.images || []);
+      await Promise.all(images.map((img) => {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise((resolve) => {
+          const timer = setTimeout(resolve, 5000);
+          img.addEventListener("load", () => { clearTimeout(timer); resolve(); }, { once: true });
+          img.addEventListener("error", () => { clearTimeout(timer); resolve(); }, { once: true });
+        });
+      }));
+    });
 
     const defaultPdfOptions = {
       format: "A4",

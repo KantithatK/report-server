@@ -354,13 +354,12 @@
                 <div class="kv"><span class="k">เลขที่</span><span class="v">{{doc.number}}</span></div>
                 <div class="kv"><span class="k">วันที่</span><span class="v">{{doc.date}}</span></div>
                 <div class="kv"><span class="k">ครบกำหนด</span><span class="v">{{safeText doc.due_date ""}}</span></div>
-                <div class="kv"><span class="k">ผู้สั่งซื้อ</span><span class="v">{{safeText doc.buyer ""}}</span></div>
-                <div class="kv"><span class="k">ชื่องาน</span><span class="v">{{safeText doc.project_name ""}}</span>
-                </div>
-                <div class="kv"><span class="k">ผู้ติดต่อ</span><span class="v">{{safeText doc.contact_name ""}}</span>
-                </div>
-                <div class="kv"><span class="k">เบอร์โทร</span><span class="v">{{safeText doc.contact_phone ""}}</span>
-                </div>
+                <div class="kv"><span class="k">ผู้จัดทำ</span><span class="v">{{safeText doc.buyer ""}}</span></div>
+                <div class="kv"><span class="k">ชื่องาน</span><span class="v">{{safeText doc.project_name ""}}</span></div>
+                {{#if doc.quotation_no}}<div class="kv"><span class="k">อ้างอิง QT</span><span class="v">{{safeText doc.quotation_no ""}}</span></div>{{/if}}
+                {{#if doc.ref_docs.length}}
+                <div class="kv"><span class="k">เอกสารอ้างอิง</span><span class="v">{{#each doc.ref_docs}}{{this.doc_no}}{{#unless @last}}, {{/unless}}{{/each}}</span></div>
+                {{/if}}
             </div>
         </div>
 
