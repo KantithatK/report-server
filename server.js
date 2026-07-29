@@ -431,6 +431,7 @@ app.use(
       if (/^http:\/\/localhost:\d+$/.test(origin)) return cb(null, true);
       if (/\.vercel\.app$/.test(origin)) return cb(null, true);
       if (/\.onrender\.com$/.test(origin)) return cb(null, true);
+      if (origin === "https://mn.tprgs.com") return cb(null, true);
       const allowed = (process.env.ALLOWED_ORIGINS || "")
         .split(",")
         .map((s) => s.trim())
