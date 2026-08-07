@@ -96,9 +96,10 @@
     .qty-cell { white-space: nowrap; }
     .summary-label { text-align: right; font-weight: 400; white-space: nowrap; }
     .summary-value { text-align: right; white-space: nowrap; }
-    .amount-words-cell { font-weight: 800; vertical-align: bottom !important; padding-top: 12px !important; }
+    .amount-words-cell { font-weight: 800; vertical-align: top; }
     .no-border-right { border-right: 0 !important; }
     .no-border-left { border-left: 0 !important; }
+    .no-border { border: 0 !important; }
 
     .footer-note { margin-top: 10px; font-size: 14px; }
     .note-title { font-weight: 800; }
@@ -116,10 +117,20 @@
       align-items: end;
     }
     .sign-col { text-align: center; padding: 0; }
-    .sign-company { font-weight: 800; margin-bottom: 48px; }
+    /* position: relative — ให้ .sign-image ยึดตำแหน่งจากกล่องนี้แทนที่จะดันความสูงของคอลัมน์ (ไม่งั้น
+       คอลัมน์ที่มีรูปจะสูงกว่าอีกฝั่งและถูกดันขึ้นเพราะ .sign-row ใช้ align-items:end) */
+    .sign-company { font-weight: 800; margin-bottom: 48px; position: relative; }
     .sign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: end; }
     .sign-line { border-top: 1px solid #999; height: 1px; margin-bottom: 5px; }
     .sign-label { font-weight: 800; }
+    /* position: absolute ตัดออกจาก flow — ไม่เพิ่มความสูงให้ .sign-company จึงไม่กระทบ layout ของแถวลายเซ็นเลย
+       top: 100% = เริ่มวางรูปทันทีใต้ข้อความชื่อบริษัท แล้วลอยอยู่ในช่องว่าง margin-bottom 48px ที่กันไว้อยู่แล้ว
+       left: 25% = กึ่งกลางคอลัมน์ซ้ายของ .sign-grid (ช่อง "ผู้วางบิล") ไม่ใช่กึ่งกลางทั้งกล่อง */
+    .sign-image {
+      position: absolute; top: 100%; left: 25%; transform: translateX(-50%);
+      margin-top: 4px; max-height: 42px; max-width: 130px; object-fit: contain;
+    }
+    .sign-date-value { font-weight: 400; margin-bottom: 3px; }
 
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -145,6 +156,7 @@
         <div class="company-sub">เลขประจำตัวผู้เสียภาษี {{company.tax_id}}</div>
         {{#if company.phone}}<div class="company-sub">โทร. {{company.phone}}</div>{{/if}}
         {{#if company.mobile}}<div class="company-sub">เบอร์มือถือ {{company.mobile}}</div>{{/if}}
+        {{#if company.email}}<div class="company-sub">{{company.email}}</div>{{/if}}
         {{#if company.fax}}<div class="company-sub">โทรสาร {{company.fax}}</div>{{/if}}
         {{#if company.website}}<div class="company-sub">{{company.website}}</div>{{/if}}
 
@@ -237,28 +249,46 @@
         {{/each}}
 
         <tr class="summary-start">
-          <td colspan="3" rowspan="{{summary.rowspan}}" class="amount-words-cell no-border-right">
-            ({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}})
-          </td>
+          <td colspan="3" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">รวมเป็นเงิน</td>
           <td class="summary-value">{{money summary.subtotal}} บาท</td>
         </tr>
+        {{#if summary.discount_total}}
+        <tr>
+          <td colspan="3" class="no-border"></td>
+          <td colspan="2" class="summary-label no-border-left">ส่วนลดรวม</td>
+          <td class="summary-value">-{{money summary.discount_total}} บาท</td>
+        </tr>
+        <tr>
+          <td colspan="3" class="no-border"></td>
+          <td colspan="2" class="summary-label no-border-left">ราคาหลังหักส่วนลด</td>
+          <td class="summary-value">{{money summary.after_discount}} บาท</td>
+        </tr>
+        {{/if}}
         {{#if summary.vat_enabled}}
         <tr>
+          <td colspan="3" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">ภาษีมูลค่าเพิ่ม 7%</td>
           <td class="summary-value">{{money summary.vat}} บาท</td>
         </tr>
         {{/if}}
         <tr class="{{#unless summary.wht_enabled}}last-summary{{/unless}}">
+          <td colspan="3" class="no-border-right {{#unless summary.wht_enabled}}amount-words-cell{{/unless}}">
+            {{#unless summary.wht_enabled}}({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}}){{/unless}}
+          </td>
           <td colspan="2" class="summary-label no-border-left">จำนวนเงินรวมทั้งสิ้น</td>
           <td class="summary-value">{{money summary.total}} บาท</td>
         </tr>
         {{#if summary.wht_enabled}}
         <tr>
+          <td colspan="3" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">หักภาษี ณ ที่จ่าย{{#if summary.withholding_percent_display}} {{summary.withholding_percent_display}}%{{/if}}</td>
           <td class="summary-value">{{money summary.withholding}} บาท</td>
         </tr>
         <tr class="last-summary">
+          <td colspan="3" class="amount-words-cell no-border-right">
+            ({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}})
+          </td>
           <td colspan="2" class="summary-label no-border-left">ยอดชำระ</td>
           <td class="summary-value">{{money summary.net_total}} บาท</td>
         </tr>
@@ -291,13 +321,21 @@
       </div>
 
       <div class="sign-col">
-        <div class="sign-company">ในนาม {{company.name}}</div>
+        <div class="sign-company">
+          ในนาม {{company.name}}
+          {{#if doc.signature_image_url}}
+          <img class="sign-image" src="{{doc.signature_image_url}}" alt="ลายเซ็น" />
+          {{/if}}
+        </div>
         <div class="sign-grid">
           <div>
             <div class="sign-line"></div>
             <div class="sign-label">ผู้วางบิล</div>
           </div>
           <div>
+            {{#if doc.signature_image_url}}
+            <div class="sign-date-value">{{doc.date}}</div>
+            {{/if}}
             <div class="sign-line"></div>
             <div class="sign-label">วันที่</div>
           </div>

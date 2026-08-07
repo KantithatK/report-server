@@ -187,6 +187,7 @@ function routeLabelFromPath(url = "") {
   if (url.startsWith("/tpr-credit-note")) return "CREDIT_NOTE";
   if (url.startsWith("/tpr-invoice")) return "INVOICE";
   if (url.startsWith("/tpr-purchase-order")) return "PURCHASE_ORDER";
+  if (url.startsWith("/tpr-goods-receipt")) return "GOODS_RECEIPT";
   if (url.startsWith("/tpr-receipt")) return "RECEIPT";
   if (url.startsWith("/tpr-tax-receipt")) return "TAX_RECEIPT";
   if (url.startsWith("/tpr-withholding-tax-certificate")) return "WHT_CERT";
@@ -501,6 +502,7 @@ const templates = {
   credit_note: compileTemplate(path.join("templates", "tpr_credit_note.hbs")),
   invoice: compileTemplate(path.join("templates", "tpr_invoice.hbs")),
   purchase_order: compileTemplate(path.join("templates", "tpr_purchase_order.hbs")),
+  goods_receipt: compileTemplate(path.join("templates", "tpr_goods_receipt.hbs")),
   receipt: compileTemplate(path.join("templates", "tpr_receipt.hbs")),
   tax_receipt: compileTemplate(path.join("templates", "tpr_tax_receipt.hbs")),
   withholding_tax_certificate: compileTemplate(
@@ -610,8 +612,9 @@ function computePurchaseOrderSummary(items, discount = 0) {
   const subtotal = items.reduce((s, x) => s + Number(x.line_total || 0), 0);
   const afterDiscount = subtotal - Number(discount || 0);
 
-  const vat = round2(afterDiscount * 0.07);
-  const total = round2(afterDiscount + vat);
+  // ราคา/หน่วยรวมภาษีมูลค่าเพิ่มอยู่แล้ว (แบบ FlowAccount) — total คือยอดสุทธิเท่าเดิม ต้องแกะ VAT ออกจากยอด ไม่ใช่บวกเพิ่ม
+  const vat = round2(afterDiscount - afterDiscount / 1.07);
+  const total = round2(afterDiscount);
 
   return {
     subtotal: round2(afterDiscount),
@@ -858,9 +861,15 @@ function normalizeQuotationPayload(payload) {
   const withholdingPercentDisplay = withholdingPercent > 0
     ? withholdingPercent.toLocaleString("th-TH", { maximumFractionDigits: 2 })
     : "";
+  const subtotalValue = round2(payloadSummary?.subtotal ?? computedSummary.subtotal);
+  // discount_total/after_discount — ส่วนลดรวมระดับเอกสาร (คำนวณฝั่งแอปจาก gross - net ของรายการ) ไม่มี field เดิมส่งผ่านมาก่อน
+  const discountTotal = round2(payloadSummary?.discount_total ?? 0);
+  const afterDiscount = round2(payloadSummary?.after_discount ?? Math.max(subtotalValue - discountTotal, 0));
   const summary = {
-    subtotal: round2(payloadSummary?.subtotal ?? computedSummary.subtotal),
+    subtotal: subtotalValue,
     discount: round2(payloadSummary?.discount ?? computedSummary.discount),
+    discount_total: discountTotal,
+    after_discount: afterDiscount,
     vat: round2(payloadSummary?.vat ?? computedSummary.vat),
     total: round2(payloadSummary?.total ?? computedSummary.total),
     withholding: round2(payloadSummary?.withholding ?? computedSummary.withholding),
@@ -887,6 +896,7 @@ function normalizeQuotationPayload(payload) {
       project_name: payload?.doc?.project_name || payload?.project_name || "",
       approver_name: payload?.doc?.approver_name || payload?.approver_name || "",
       reference_no: payload?.doc?.reference_no || payload?.reference_no || "",
+      signature_image_url: payload?.doc?.signature_image_url || "",
     },
     customer: normalizeCustomer(payload),
     contact: {
@@ -973,9 +983,15 @@ function normalizeInvoicePayload(payload) {
   const withholdingPercentDisplay = withholdingPercent > 0
     ? withholdingPercent.toLocaleString("th-TH", { maximumFractionDigits: 2 })
     : "";
+  const subtotalValue = round2(payloadSummary?.subtotal ?? computedSummary.subtotal);
+  // discount_total/after_discount — ส่วนลดรวมระดับเอกสาร (คำนวณฝั่งแอปจาก gross - net ของรายการ) ไม่มี field เดิมส่งผ่านมาก่อน
+  const discountTotal = round2(payloadSummary?.discount_total ?? 0);
+  const afterDiscount = round2(payloadSummary?.after_discount ?? Math.max(subtotalValue - discountTotal, 0));
   const summary = {
-    subtotal: round2(payloadSummary?.subtotal ?? computedSummary.subtotal),
+    subtotal: subtotalValue,
     discount: round2(payloadSummary?.discount ?? computedSummary.discount),
+    discount_total: discountTotal,
+    after_discount: afterDiscount,
     vat: round2(payloadSummary?.vat ?? computedSummary.vat),
     total: round2(payloadSummary?.total ?? computedSummary.total),
     withholding: round2(payloadSummary?.withholding ?? computedSummary.withholding),
@@ -1023,6 +1039,7 @@ function normalizeInvoicePayload(payload) {
       prepared_by:  payload?.doc?.prepared_by  || "",
       project_name: payload?.doc?.project_name || "",
       reference_no: payload?.doc?.reference_no || payload?.reference_no || "",
+      signature_image_url: payload?.doc?.signature_image_url || "",
     },
     customer: normalizeCustomer(payload),
     contact: {
@@ -1061,6 +1078,20 @@ function normalizePurchaseOrderPayload(payload) {
 
   const total_text = totalTextFromClient || thaiBahtText(total);
 
+  // มูลค่าที่ไม่มี/ยกเว้นภาษี vs มูลค่าที่คำนวณภาษี — อิงค่าที่ frontend ส่งมาก่อน (ตรงกับ subtotal/vat ที่แกะ VAT ออกแล้ว)
+  const isTaxable = vat > 0;
+  const exempt_amount = round2(
+    parseNumberLoose(payload?.summary?.exempt_amount) || (isTaxable ? 0 : subtotal)
+  );
+  const taxable_amount = round2(
+    parseNumberLoose(payload?.summary?.taxable_amount) || (isTaxable ? subtotal - vat : 0)
+  );
+  // ส่วนลดรวมระดับเอกสาร — ไม่มี field เดิมส่งผ่านมาก่อน (subtotal ที่ frontend ส่งมาตอนนี้เป็นยอดก่อนหักส่วนลด/gross)
+  const discount_total = round2(parseNumberLoose(payload?.summary?.discount_total) || 0);
+  const after_discount = round2(
+    parseNumberLoose(payload?.summary?.after_discount) || Math.max(subtotal - discount_total, 0)
+  );
+
   return {
     css_inline: cssInline,
     company: normalizeCompany(payload),
@@ -1079,10 +1110,12 @@ function normalizePurchaseOrderPayload(payload) {
         "10/01/2026",
       due_date: payload?.doc?.due_date || payload?.dueDate || payload?.doc?.dueDate || "",
       buyer: payload?.doc?.buyer || payload?.buyer || payload?.purchaser || "",
+      reference_no: payload?.doc?.reference_no || payload?.reference_no || "",
       project_name: payload?.doc?.project_name || payload?.project_name || payload?.projectName || "",
       quotation_no: payload?.doc?.quotation_no || payload?.quotation_no || payload?.quotationNo || "",
       ref_docs: Array.isArray(payload?.ref_docs) ? payload.ref_docs.filter(r => r.doc_no?.trim()) : [],
       copy_label: payload?.doc?.copy_label || payload?.copy_label || payload?.copyLabel || "ต้นฉบับ",
+      signature_image_url: payload?.doc?.signature_image_url || "",
     },
     vendor: normalizeVendor(payload),
     items,
@@ -1092,9 +1125,13 @@ function normalizePurchaseOrderPayload(payload) {
     },
     summary: {
       subtotal,
+      discount_total,
+      after_discount,
       vat,
       total,
       total_text,
+      exempt_amount,
+      taxable_amount,
     },
     closing_message:
       payload?.closing_message ||
@@ -1117,6 +1154,75 @@ function normalizePurchaseOrderPayload(payload) {
         payload?.confirmation?.sign2Label ||
         "ประทับตราหน่วยงาน",
       footnote: payload?.confirmation?.footnote || payload?.confirmationFootnote || "",
+    },
+  };
+}
+
+function normalizeGoodsReceiptPayload(payload) {
+  const items = normalizeItems(payload);
+
+  const discount = Number(payload?.discount || payload?.summary?.discount || 0);
+  const computed = computePurchaseOrderSummary(items, discount);
+
+  const subtotalFromClient = payload?.summary?.subtotal ?? payload?.subtotal;
+  const vatFromClient = payload?.summary?.vat ?? payload?.vat;
+  const totalFromClient = payload?.summary?.total ?? payload?.total;
+
+  const subtotal = round2(parseNumberLoose(subtotalFromClient) || computed.subtotal);
+  const vat = round2(parseNumberLoose(vatFromClient) || computed.vat);
+  const total = round2(parseNumberLoose(totalFromClient) || computed.total);
+
+  const totalTextFromClient =
+    typeof payload?.summary?.total_text === "string" && payload.summary.total_text.trim()
+      ? payload.summary.total_text.trim()
+      : typeof payload?.total_text === "string" && payload.total_text.trim()
+        ? payload.total_text.trim()
+        : "";
+
+  const total_text = totalTextFromClient || thaiBahtText(total);
+
+  // มูลค่าที่ไม่มี/ยกเว้นภาษี vs มูลค่าที่คำนวณภาษี — อิงค่าที่ frontend ส่งมาก่อน (ตรงกับ subtotal/vat ที่แกะ VAT ออกแล้ว)
+  const isTaxable = vat > 0;
+  const exempt_amount = round2(
+    parseNumberLoose(payload?.summary?.exempt_amount) || (isTaxable ? 0 : subtotal)
+  );
+  const taxable_amount = round2(
+    parseNumberLoose(payload?.summary?.taxable_amount) || (isTaxable ? subtotal - vat : 0)
+  );
+  // ส่วนลดรวมระดับเอกสาร — ไม่มี field เดิมส่งผ่านมาก่อน (subtotal ที่ frontend ส่งมาตอนนี้เป็นยอดก่อนหักส่วนลด/gross)
+  const discount_total = round2(parseNumberLoose(payload?.summary?.discount_total) || 0);
+  const after_discount = round2(
+    parseNumberLoose(payload?.summary?.after_discount) || Math.max(subtotal - discount_total, 0)
+  );
+
+  return {
+    css_inline: cssInline,
+    company: normalizeCompany(payload),
+    doc: {
+      number: payload?.doc?.number || payload?.docNumber || "RI-DEV-0001",
+      date: payload?.doc?.date || payload?.docDate || "10/01/2026",
+      due_date: payload?.doc?.due_date || payload?.dueDate || payload?.doc?.dueDate || "",
+      buyer: payload?.doc?.buyer || payload?.buyer || "",
+      reference_no: payload?.doc?.reference_no || payload?.reference_no || "",
+      project_name: payload?.doc?.project_name || payload?.project_name || payload?.projectName || "",
+      po_no: payload?.doc?.po_no || payload?.po_no || payload?.poNo || "",
+      signature_image_url: payload?.doc?.signature_image_url || "",
+    },
+    vendor: normalizeVendor(payload),
+    items,
+    notes: {
+      title: payload?.notes?.title || payload?.note_title || payload?.noteTitle || "หมายเหตุ :",
+      text: payload?.notes?.text || payload?.notes || payload?.note || payload?.remark || "",
+    },
+    summary: {
+      subtotal,
+      discount_total,
+      after_discount,
+      vat,
+      total,
+      total_text,
+      exempt_amount,
+      taxable_amount,
     },
   };
 }
@@ -1247,6 +1353,7 @@ function normalizeTaxReceiptPayload(payload) {
       date:         payload?.doc?.date         || payload?.docDate   || "10/01/2026",
       prepared_by:  payload?.doc?.prepared_by  || "",
       project_name: payload?.doc?.project_name || "",
+      signature_image_url: payload?.doc?.signature_image_url || "",
     },
     customer: normalizeCustomer(payload),
     contact: {
@@ -2138,6 +2245,14 @@ makeDocRoutes({
   templateFn: templates.purchase_order,
   normalizer: normalizePurchaseOrderPayload,
   filename: "tpr_purchase_order.pdf",
+});
+
+// ----- Goods Receipt -----
+makeDocRoutes({
+  basePath: "/tpr-goods-receipt",
+  templateFn: templates.goods_receipt,
+  normalizer: normalizeGoodsReceiptPayload,
+  filename: "tpr_goods_receipt.pdf",
 });
 
 // ----- Receipt -----
