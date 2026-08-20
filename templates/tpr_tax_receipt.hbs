@@ -200,9 +200,10 @@
           {{/if}}
         </div>
 
-        {{#if doc.project_name}}
         <div class="meta-list">
+          {{#if doc.project_name}}
           <div class="meta-row"><span class="mk">ชื่องาน</span><span class="mv">{{doc.project_name}}</span></div>
+          {{/if}}
           {{#if contact.name}}
           <div class="meta-row"><span class="mk">ผู้ติดต่อ</span><span class="mv">{{contact.name}}{{#if contact.title}} ({{contact.title}}){{/if}}</span></div>
           {{/if}}
@@ -213,7 +214,6 @@
           <div class="meta-row"><span class="mk">อีเมล</span><span class="mv">{{contact.email}}</span></div>
           {{/if}}
         </div>
-        {{/if}}
       </div>
     </div>
 
@@ -287,7 +287,7 @@
         {{#if summary.vat_enabled}}
         <tr>
           <td colspan="3" class="no-border"></td>
-          <td colspan="2" class="summary-label no-border-left">ภาษีมูลค่าเพิ่ม 7%</td>
+          <td colspan="2" class="summary-label no-border-left">ภาษีมูลค่าเพิ่ม{{#if summary.vat_rate_display}} {{summary.vat_rate_display}}%{{/if}}</td>
           <td class="summary-value">{{money summary.vat}} บาท</td>
         </tr>
         {{/if}}

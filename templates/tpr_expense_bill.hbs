@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="/fonts/th-sarabun-new.css">
 
 
-  <title>Quotation {{doc.number}}</title>
+  <title>Expense Note {{doc.number}}</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -18,7 +18,7 @@
       line-height: 1.16;
     }
     .page { width: 100%; min-height: 270mm; position: relative; }
-    .page-content { padding-bottom: 118px; }
+    .page-content { padding-bottom: 200px; }
 
     .doc-title { text-align: left; font-size: 24px; font-weight: 800; margin: 0 0 22px; }
     .header-row {
@@ -48,7 +48,7 @@
     .meta-list + .meta-list { margin-top: 6px; }
     .meta-row {
       display: grid;
-      grid-template-columns: 62px 1fr;
+      grid-template-columns: 76px 1fr;
       column-gap: 8px;
       min-height: 14px;
       font-size: 14px;
@@ -84,9 +84,11 @@
 
     .col-no { width: 40px; }
     .col-desc { width: auto; }
+    .col-category { width: 90px; }
     .col-qty { width: 58px; }
     .col-price { width: 82px; }
     .col-discount { width: 58px; }
+    .col-tax { width: 50px; }
     .col-amount { width: 86px; }
 
     .center { text-align: center; }
@@ -105,33 +107,39 @@
     .note-title { font-weight: 800; }
     .note-text { white-space: pre-line; margin-top: 2px; }
 
-    .sign-row {
+    /* ===== Payment confirmation (mirror tpr_tax_receipt.hbs เป๊ะ) ===== */
+    .pay-block { margin-top: 12px; font-size: 14px; text-align: center; }
+    .pay-row { display: flex; justify-content: center; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .pay-line {
+      border-bottom: 1px dotted #333;
+      display: inline-block;
+      min-width: 120px;
+      transform: translateY(-2px);
+    }
+    .pay-line.sm { min-width: 90px; }
+    .pay-value { font-weight: 800; }
+
+    .bottom-fixed {
       position: fixed;
       bottom: 18mm;
       left: 0;
       right: 0;
+    }
+    .sign-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 132px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
       padding: 0;
       align-items: end;
+      margin-top: 22px;
     }
     .sign-col { text-align: center; padding: 0; }
-    /* position: relative — ให้ .sign-image ยึดตำแหน่งจากกล่องนี้แทนที่จะดันความสูงของคอลัมน์ (ไม่งั้น
-       คอลัมน์ที่มีรูปจะสูงกว่าอีกฝั่งและถูกดันขึ้นเพราะ .sign-row ใช้ align-items:end) */
-    .sign-company { font-weight: 800; margin-bottom: 48px; position: relative; }
-    .sign-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: end; }
-    .sign-line { border-top: 1px solid #999; height: 1px; margin-bottom: 5px; }
-    /* position: absolute ตัดออกจาก flow — ไม่เพิ่มความสูงให้ .sign-company จึงไม่กระทบ layout ของแถวลายเซ็นเลย
-       top: 100% = เริ่มวางรูปทันทีใต้ข้อความชื่อบริษัท แล้วลอยอยู่ในช่องว่าง margin-bottom 48px ที่กันไว้อยู่แล้ว
-       left: 25% = กึ่งกลางคอลัมน์ซ้ายของ .sign-grid (ช่อง "ผู้อนุมัติ") ไม่ใช่กึ่งกลางทั้งกล่อง เพราะฝั่งขวา
-       เป็นช่อง "วันที่" แยกต่างหาก ไม่ควรมีลายเซ็นคาบเกี่ยว */
-    .sign-image {
-      position: absolute; top: 100%; left: 25%; transform: translateX(-50%);
-      margin-top: 4px; max-height: 42px; max-width: 130px; object-fit: contain;
-    }
-    .sign-date-value { font-weight: 400; margin-bottom: 3px; }
+    .sign-line { border-top: 1px solid #999; height: 1px; width: 120px; margin: 0 auto 5px; }
+    .sign-name { min-height: 16px; margin-bottom: 4px; }
     .sign-label { font-weight: 800; }
+    .sign-date-row { margin-top: 22px; }
+    .sign-date-label { font-weight: 800; font-size: 12px; }
+    .sign-date-line { border-bottom: 1px dotted #666; display: inline-block; width: 120px; margin-left: 4px; }
 
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -142,7 +150,7 @@
 <body>
   <div class="page">
   <div class="page-content">
-    <!-- Header: บริษัท (ซ้าย) + ใบเสนอราคา + เมตา (ขวา) -->
+    <!-- Header: บริษัท (ซ้าย, ผู้จ่ายเงิน) + บันทึกค่าใช้จ่าย + เมตา (ขวา) -->
     <div class="header-row">
       <div class="company-col">
         <div class="logo-box">
@@ -158,19 +166,17 @@
         {{#if company.phone}}<div class="company-sub">โทร. {{company.phone}}</div>{{/if}}
         {{#if company.mobile}}<div class="company-sub">เบอร์มือถือ {{company.mobile}}</div>{{/if}}
         {{#if company.email}}<div class="company-sub">{{company.email}}</div>{{/if}}
-        {{#if company.fax}}<div class="company-sub">โทรสาร {{company.fax}}</div>{{/if}}
-        {{#if company.website}}<div class="company-sub">{{company.website}}</div>{{/if}}
 
         <div class="customer-block">
-          <div class="cust-label">ลูกค้า</div>
-          <div class="cust-name">{{customer.name}}</div>
-          {{#if customer.address}}<div class="cust-line">{{customer.address}}</div>{{/if}}
-          {{#if customer.tax_id}}<div class="cust-line">เลขประจำตัวผู้เสียภาษี {{customer.tax_id}}</div>{{/if}}
+          <div class="cust-label">ผู้จำหน่าย</div>
+          <div class="cust-name">{{vendor.name}}</div>
+          {{#if vendor.address}}<div class="cust-line">{{vendor.address}}</div>{{/if}}
+          {{#if vendor.tax_id}}<div class="cust-line">เลขประจำตัวผู้เสียภาษี {{vendor.tax_id}}</div>{{/if}}
         </div>
       </div>
 
       <div class="doc-col">
-        <div class="doc-title">ใบเสนอราคา</div>
+        <div class="doc-title">บันทึกค่าใช้จ่าย</div>
 
         <div class="meta-list">
           <div class="meta-row"><span class="mk">เลขที่</span><span class="mv">{{doc.number}}</span></div>
@@ -178,11 +184,11 @@
           {{#if doc.credit_days}}
           <div class="meta-row"><span class="mk">เครดิต</span><span class="mv">{{doc.credit_days}}</span></div>
           {{/if}}
-          {{#if doc.prepared_by}}
-          <div class="meta-row"><span class="mk">ผู้ขาย</span><span class="mv">{{doc.prepared_by}}</span></div>
-          {{/if}}
           {{#if doc.reference_no}}
-          <div class="meta-row"><span class="mk">อ้างอิง</span><span class="mv">{{doc.reference_no}}</span></div>
+          <div class="meta-row"><span class="mk">เลขอ้างอิง</span><span class="mv">{{doc.reference_no}}</span></div>
+          {{/if}}
+          {{#if doc.prepared_by}}
+          <div class="meta-row"><span class="mk">ผู้จัดทำ</span><span class="mv">{{doc.prepared_by}}</span></div>
           {{/if}}
         </div>
 
@@ -190,14 +196,14 @@
           {{#if doc.project_name}}
           <div class="meta-row"><span class="mk">ชื่องาน</span><span class="mv">{{doc.project_name}}</span></div>
           {{/if}}
-          {{#if contact.name}}
-          <div class="meta-row"><span class="mk">ผู้ติดต่อ</span><span class="mv">{{contact.name}}{{#if contact.title}} ({{contact.title}}){{/if}}</span></div>
+          {{#if doc.contact_name}}
+          <div class="meta-row"><span class="mk">ผู้ติดต่อ</span><span class="mv">{{doc.contact_name}}{{#if doc.contact_title}} ({{doc.contact_title}}){{/if}}</span></div>
           {{/if}}
-          {{#if contact.phone}}
-          <div class="meta-row"><span class="mk">เบอร์โทร</span><span class="mv">{{contact.phone}}</span></div>
+          {{#if doc.contact_phone}}
+          <div class="meta-row"><span class="mk">เบอร์โทร</span><span class="mv">{{doc.contact_phone}}</span></div>
           {{/if}}
-          {{#if contact.email}}
-          <div class="meta-row"><span class="mk">อีเมล</span><span class="mv">{{contact.email}}</span></div>
+          {{#if doc.contact_email}}
+          <div class="meta-row"><span class="mk">อีเมล</span><span class="mv">{{doc.contact_email}}</span></div>
           {{/if}}
         </div>
       </div>
@@ -208,18 +214,22 @@
       <colgroup>
         <col class="col-no" />
         <col class="col-desc" />
+        <col class="col-category" />
         <col class="col-qty" />
         <col class="col-price" />
         <col class="col-discount" />
+        <col class="col-tax" />
         <col class="col-amount" />
       </colgroup>
       <thead>
         <tr>
           <th class="col-no">ลำดับ</th>
           <th class="col-desc">รายละเอียด</th>
+          <th class="col-category">หมวดหมู่</th>
           <th class="col-qty">จำนวน</th>
           <th class="col-price">ราคาต่อหน่วย</th>
           <th class="col-discount">ส่วนลด</th>
+          <th class="col-tax">ภาษี</th>
           <th class="col-amount">มูลค่า</th>
         </tr>
       </thead>
@@ -231,41 +241,53 @@
             <div class="desc-strong">{{name}}</div>
             {{#if description}}<div class="desc-muted">{{description}}</div>{{/if}}
           </td>
+          <td class="center">{{#if category}}{{category}}{{else}}-{{/if}}</td>
           <td class="center">
             <span class="qty-cell">{{qty}} {{unit}}</span>
           </td>
           <td class="right">{{money price}}</td>
           <td class="right">{{discount_display}}</td>
+          <td class="center">{{tax_display}}</td>
           <td class="right">{{money line_total}}</td>
         </tr>
         {{/each}}
 
         <tr class="summary-start">
-          <td colspan="3" class="no-border-right"></td>
+          <td colspan="5" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">รวมเป็นเงิน</td>
-          <td class="summary-value">{{money summary.subtotal}} บาท</td>
+          <td class="summary-value">{{money summary.gross_subtotal}} บาท</td>
         </tr>
         {{#if summary.discount_total}}
         <tr>
-          <td colspan="3" class="no-border"></td>
+          <td colspan="5" class="no-border"></td>
           <td colspan="2" class="summary-label no-border-left">ส่วนลดรวม</td>
           <td class="summary-value">-{{money summary.discount_total}} บาท</td>
         </tr>
         <tr>
-          <td colspan="3" class="no-border"></td>
+          <td colspan="5" class="no-border"></td>
           <td colspan="2" class="summary-label no-border-left">ราคาหลังหักส่วนลด</td>
           <td class="summary-value">{{money summary.after_discount}} บาท</td>
         </tr>
         {{/if}}
+        <tr>
+          <td colspan="5" class="no-border-right"></td>
+          <td colspan="2" class="summary-label no-border-left">มูลค่าที่ไม่มี/ยกเว้นภาษี</td>
+          <td class="summary-value">{{money summary.exempt_amount}} บาท</td>
+        </tr>
+        <tr>
+          <td colspan="5" class="no-border-right"></td>
+          <td colspan="2" class="summary-label no-border-left">มูลค่าที่คำนวณภาษี</td>
+          <td class="summary-value">{{money summary.taxable_amount}} บาท</td>
+        </tr>
         {{#if summary.vat_enabled}}
         <tr>
-          <td colspan="3" class="no-border-right"></td>
+          <td colspan="5" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">ภาษีมูลค่าเพิ่ม{{#if summary.vat_rate_display}} {{summary.vat_rate_display}}%{{/if}}</td>
           <td class="summary-value">{{money summary.vat}} บาท</td>
         </tr>
         {{/if}}
         <tr class="{{#unless summary.wht_enabled}}last-summary{{/unless}}">
-          <td colspan="3" class="no-border-right {{#unless summary.wht_enabled}}amount-words-cell{{/unless}}">
+          <td colspan="5" class="no-border-right {{#unless summary.wht_enabled}}amount-words-cell{{/unless}}">
             {{#unless summary.wht_enabled}}({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}}){{/unless}}
           </td>
           <td colspan="2" class="summary-label no-border-left">จำนวนเงินรวมทั้งสิ้น</td>
@@ -273,16 +295,16 @@
         </tr>
         {{#if summary.wht_enabled}}
         <tr>
-          <td colspan="3" class="no-border-right"></td>
-          <td colspan="2" class="summary-label no-border-left">หักภาษี ณ ที่จ่าย{{#if summary.withholding_percent_display}} {{summary.withholding_percent_display}}%{{/if}}</td>
-          <td class="summary-value">{{money summary.withholding}} บาท</td>
+          <td colspan="5" class="no-border-right"></td>
+          <td colspan="2" class="summary-label no-border-left">หักภาษี ณ ที่จ่าย{{#if summary.wht_percent}} {{summary.wht_percent}}%{{/if}}</td>
+          <td class="summary-value">{{money summary.wht_amount}} บาท</td>
         </tr>
         <tr class="last-summary">
-          <td colspan="3" class="amount-words-cell no-border-right">
+          <td colspan="5" class="amount-words-cell no-border-right">
             ({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}})
           </td>
           <td colspan="2" class="summary-label no-border-left">ยอดชำระ</td>
-          <td class="summary-value">{{money summary.net_total}} บาท</td>
+          <td class="summary-value">{{money summary.net_payable}} บาท</td>
         </tr>
         {{/if}}
       </tbody>
@@ -290,50 +312,66 @@
 
     <!-- หมายเหตุ -->
     <div class="footer-note">
-      <div class="note-title">หมายเหตุ</div>
-      {{#if terms.bank_note}}<div class="note-text">{{terms.bank_note}}</div>{{/if}}
+      <div class="note-title">{{#if notes.title}}{{notes.title}}{{else}}หมายเหตุ{{/if}}</div>
+      {{#if notes.text}}<div class="note-text">{{notes.text}}</div>{{/if}}
     </div>
 
   </div><!-- /page-content -->
 
-    <!-- Signatures: fixed ด้านล่างสุดของหน้า -->
+    <!-- การชำระเงิน + Signatures: fixed ติดกันด้านล่างสุดของหน้า (mirror tpr_tax_receipt.hbs เป๊ะ) -->
+    <div class="bottom-fixed">
+    <div class="pay-block">
+      {{#if payment}}
+      <div>การชำระเงินสมบูรณ์แล้ว&nbsp;&nbsp;ชำระโดย <strong>{{payment.method}}</strong></div>
+      <div class="pay-row">
+        {{#if payment.is_cheque}}
+        <span>ธนาคาร</span><span class="pay-value">{{#if payment.bank_name}}{{payment.bank_name}}{{else}}-{{/if}}</span>
+        <span>เลขที่</span><span class="pay-value">{{#if payment.cheque_no}}{{payment.cheque_no}}{{else}}-{{/if}}</span>
+        <span>วันที่</span><span class="pay-value">{{#if payment.cheque_date}}{{payment.cheque_date}}{{else}}-{{/if}}</span>
+        {{else}}
+        <span>วันที่รับชำระ</span><span class="pay-value">{{#if payment.date}}{{payment.date}}{{else}}-{{/if}}</span>
+        {{/if}}
+        <span>จำนวนเงิน</span><span class="pay-value">{{money payment.amount}} บาท</span>
+      </div>
+      {{else}}
+      <div>การชำระเงินจะสมบูรณ์เมื่อบริษัทได้รับเงินเรียบร้อยแล้ว&nbsp;&nbsp;เงินสด / เช็ค / โอนเงิน / บัตรเครดิต</div>
+      <div class="pay-row">
+        <span>ธนาคาร</span><span class="pay-line sm"></span>
+        <span>เลขที่</span><span class="pay-line sm"></span>
+        <span>วันที่</span><span class="pay-line sm"></span>
+        <span>จำนวนเงิน</span><span class="pay-line sm"></span>
+      </div>
+      {{/if}}
+    </div>
+
     <div class="sign-row">
       <div class="sign-col">
-        <div class="sign-company">ในนาม {{customer.name}}</div>
-        <div class="sign-grid">
-          <div>
-            <div class="sign-line"></div>
-            <div class="sign-label">ผู้สั่งซื้อสินค้า</div>
-          </div>
-          <div>
-            <div class="sign-line"></div>
-            <div class="sign-label">วันที่</div>
-          </div>
-        </div>
+        <div class="sign-name">&nbsp;</div>
+        <div class="sign-line"></div>
+        <div class="sign-label">ผู้รับเงิน</div>
+        <div class="sign-date-row"><span class="sign-date-label">วันที่</span><span class="sign-date-line">&nbsp;</span></div>
       </div>
 
       <div class="sign-col">
-        <div class="sign-company">
-          ในนาม {{company.name}}
+        <div class="sign-name">&nbsp;</div>
+        <div class="sign-line"></div>
+        <div class="sign-label">ผู้จัดทำ</div>
+        <div class="sign-date-row"><span class="sign-date-label">วันที่</span><span class="sign-date-line">&nbsp;</span></div>
+      </div>
+
+      <div class="sign-col">
+        <div class="sign-name">
+          &nbsp;
           {{#if doc.signature_image_url}}
-          <img class="sign-image" src="{{doc.signature_image_url}}" alt="ลายเซ็น" />
+          <img class="sign-image" src="{{doc.signature_image_url}}" alt="ลายเซ็น" style="max-height:36px;max-width:120px;object-fit:contain;" />
           {{/if}}
         </div>
-        <div class="sign-grid">
-          <div>
-            <div class="sign-line"></div>
-            <div class="sign-label">ผู้อนุมัติ</div>
-          </div>
-          <div>
-            {{#if doc.signature_image_url}}
-            <div class="sign-date-value">{{doc.date}}</div>
-            {{/if}}
-            <div class="sign-line"></div>
-            <div class="sign-label">วันที่</div>
-          </div>
-        </div>
+        <div class="sign-line"></div>
+        <div class="sign-label">ผู้อนุมัติ</div>
+        <div class="sign-date-row"><span class="sign-date-label">วันที่</span><span class="sign-date-line">&nbsp;</span></div>
       </div>
     </div>
+    </div><!-- /bottom-fixed -->
 
   </div><!-- /page -->
 </body>

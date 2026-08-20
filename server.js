@@ -188,6 +188,7 @@ function routeLabelFromPath(url = "") {
   if (url.startsWith("/tpr-invoice")) return "INVOICE";
   if (url.startsWith("/tpr-purchase-order")) return "PURCHASE_ORDER";
   if (url.startsWith("/tpr-goods-receipt")) return "GOODS_RECEIPT";
+  if (url.startsWith("/tpr-expense-bill")) return "EXPENSE_BILL";
   if (url.startsWith("/tpr-receipt")) return "RECEIPT";
   if (url.startsWith("/tpr-tax-receipt")) return "TAX_RECEIPT";
   if (url.startsWith("/tpr-withholding-tax-certificate")) return "WHT_CERT";
@@ -503,6 +504,7 @@ const templates = {
   invoice: compileTemplate(path.join("templates", "tpr_invoice.hbs")),
   purchase_order: compileTemplate(path.join("templates", "tpr_purchase_order.hbs")),
   goods_receipt: compileTemplate(path.join("templates", "tpr_goods_receipt.hbs")),
+  expense_bill: compileTemplate(path.join("templates", "tpr_expense_bill.hbs")),
   receipt: compileTemplate(path.join("templates", "tpr_receipt.hbs")),
   tax_receipt: compileTemplate(path.join("templates", "tpr_tax_receipt.hbs")),
   withholding_tax_certificate: compileTemplate(
@@ -865,19 +867,27 @@ function normalizeQuotationPayload(payload) {
   // discount_total/after_discount — ส่วนลดรวมระดับเอกสาร (คำนวณฝั่งแอปจาก gross - net ของรายการ) ไม่มี field เดิมส่งผ่านมาก่อน
   const discountTotal = round2(payloadSummary?.discount_total ?? 0);
   const afterDiscount = round2(payloadSummary?.after_discount ?? Math.max(subtotalValue - discountTotal, 0));
+  const vatEnabled = payloadSummary?.vat_enabled !== false;
+  // vat_rate — อัตราภาษีจริงที่ระบบ TPR เลือกใช้ (มาสเตอร์ tpr_vat_rates); ไม่มีอัตราตายตัวอีกต่อไป fallback 7 ไว้เผื่อ payload เก่าที่ยังไม่ส่งค่านี้มา
+  const vatRate = vatEnabled ? round2(payloadSummary?.vat_rate ?? 7) : 0;
+  const vatRateDisplay = vatEnabled && vatRate > 0
+    ? vatRate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
   const summary = {
     subtotal: subtotalValue,
     discount: round2(payloadSummary?.discount ?? computedSummary.discount),
     discount_total: discountTotal,
     after_discount: afterDiscount,
     vat: round2(payloadSummary?.vat ?? computedSummary.vat),
+    vat_rate: vatRate,
+    vat_rate_display: vatRateDisplay,
     total: round2(payloadSummary?.total ?? computedSummary.total),
     withholding: round2(payloadSummary?.withholding ?? computedSummary.withholding),
     net_total: round2(payloadSummary?.net_total ?? computedSummary.net_total),
     withholding_rate: withholdingRate,
     wht_percent: withholdingPercent,
     withholding_percent_display: withholdingPercentDisplay,
-    vat_enabled: payloadSummary?.vat_enabled !== false,
+    vat_enabled: vatEnabled,
     wht_enabled: !!payloadSummary?.wht_enabled,
     total_text: payloadSummary?.total_text || computedSummary.total_text,
   };
@@ -987,19 +997,27 @@ function normalizeInvoicePayload(payload) {
   // discount_total/after_discount — ส่วนลดรวมระดับเอกสาร (คำนวณฝั่งแอปจาก gross - net ของรายการ) ไม่มี field เดิมส่งผ่านมาก่อน
   const discountTotal = round2(payloadSummary?.discount_total ?? 0);
   const afterDiscount = round2(payloadSummary?.after_discount ?? Math.max(subtotalValue - discountTotal, 0));
+  const vatEnabled = payloadSummary?.vat_enabled !== false;
+  // vat_rate — อัตราภาษีจริงที่ระบบ TPR เลือกใช้ (มาสเตอร์ tpr_vat_rates); ไม่มีอัตราตายตัวอีกต่อไป fallback 7 ไว้เผื่อ payload เก่าที่ยังไม่ส่งค่านี้มา
+  const vatRate = vatEnabled ? round2(payloadSummary?.vat_rate ?? 7) : 0;
+  const vatRateDisplay = vatEnabled && vatRate > 0
+    ? vatRate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
   const summary = {
     subtotal: subtotalValue,
     discount: round2(payloadSummary?.discount ?? computedSummary.discount),
     discount_total: discountTotal,
     after_discount: afterDiscount,
     vat: round2(payloadSummary?.vat ?? computedSummary.vat),
+    vat_rate: vatRate,
+    vat_rate_display: vatRateDisplay,
     total: round2(payloadSummary?.total ?? computedSummary.total),
     withholding: round2(payloadSummary?.withholding ?? computedSummary.withholding),
     net_total: round2(payloadSummary?.net_total ?? computedSummary.net_total),
     withholding_rate: withholdingRate,
     wht_percent: withholdingPercent,
     withholding_percent_display: withholdingPercentDisplay,
-    vat_enabled: payloadSummary?.vat_enabled !== false,
+    vat_enabled: vatEnabled,
     wht_enabled: !!payloadSummary?.wht_enabled,
     total_text: payloadSummary?.total_text || computedSummary.total_text,
   };
@@ -1084,13 +1102,18 @@ function normalizePurchaseOrderPayload(payload) {
     parseNumberLoose(payload?.summary?.exempt_amount) || (isTaxable ? 0 : subtotal)
   );
   const taxable_amount = round2(
-    parseNumberLoose(payload?.summary?.taxable_amount) || (isTaxable ? subtotal - vat : 0)
+    parseNumberLoose(payload?.summary?.taxable_amount) || (isTaxable ? subtotal : 0)
   );
   // ส่วนลดรวมระดับเอกสาร — ไม่มี field เดิมส่งผ่านมาก่อน (subtotal ที่ frontend ส่งมาตอนนี้เป็นยอดก่อนหักส่วนลด/gross)
   const discount_total = round2(parseNumberLoose(payload?.summary?.discount_total) || 0);
   const after_discount = round2(
     parseNumberLoose(payload?.summary?.after_discount) || Math.max(subtotal - discount_total, 0)
   );
+  // vat_rate — อัตราภาษีจริงที่ระบบ TPR เลือกใช้ (มาสเตอร์ tpr_vat_rates); ไม่มีอัตราตายตัวอีกต่อไป fallback 7 ไว้เผื่อ payload เก่าที่ยังไม่ส่งค่านี้มา
+  const vat_rate = isTaxable ? round2(parseNumberLoose(payload?.summary?.vat_rate) || 7) : 0;
+  const vat_rate_display = isTaxable && vat_rate > 0
+    ? vat_rate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
 
   return {
     css_inline: cssInline,
@@ -1116,6 +1139,10 @@ function normalizePurchaseOrderPayload(payload) {
       ref_docs: Array.isArray(payload?.ref_docs) ? payload.ref_docs.filter(r => r.doc_no?.trim()) : [],
       copy_label: payload?.doc?.copy_label || payload?.copy_label || payload?.copyLabel || "ต้นฉบับ",
       signature_image_url: payload?.doc?.signature_image_url || "",
+      contact_name: payload?.doc?.contact_name || "",
+      contact_title: payload?.doc?.contact_title || "",
+      contact_phone: payload?.doc?.contact_phone || "",
+      contact_email: payload?.doc?.contact_email || "",
     },
     vendor: normalizeVendor(payload),
     items,
@@ -1128,6 +1155,8 @@ function normalizePurchaseOrderPayload(payload) {
       discount_total,
       after_discount,
       vat,
+      vat_rate,
+      vat_rate_display,
       total,
       total_text,
       exempt_amount,
@@ -1187,13 +1216,18 @@ function normalizeGoodsReceiptPayload(payload) {
     parseNumberLoose(payload?.summary?.exempt_amount) || (isTaxable ? 0 : subtotal)
   );
   const taxable_amount = round2(
-    parseNumberLoose(payload?.summary?.taxable_amount) || (isTaxable ? subtotal - vat : 0)
+    parseNumberLoose(payload?.summary?.taxable_amount) || (isTaxable ? subtotal : 0)
   );
   // ส่วนลดรวมระดับเอกสาร — ไม่มี field เดิมส่งผ่านมาก่อน (subtotal ที่ frontend ส่งมาตอนนี้เป็นยอดก่อนหักส่วนลด/gross)
   const discount_total = round2(parseNumberLoose(payload?.summary?.discount_total) || 0);
   const after_discount = round2(
     parseNumberLoose(payload?.summary?.after_discount) || Math.max(subtotal - discount_total, 0)
   );
+  // vat_rate — อัตราภาษีจริงที่ระบบ TPR เลือกใช้ (มาสเตอร์ tpr_vat_rates); ไม่มีอัตราตายตัวอีกต่อไป fallback 7 ไว้เผื่อ payload เก่าที่ยังไม่ส่งค่านี้มา
+  const vat_rate = isTaxable ? round2(parseNumberLoose(payload?.summary?.vat_rate) || 7) : 0;
+  const vat_rate_display = isTaxable && vat_rate > 0
+    ? vat_rate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
 
   return {
     css_inline: cssInline,
@@ -1207,6 +1241,10 @@ function normalizeGoodsReceiptPayload(payload) {
       project_name: payload?.doc?.project_name || payload?.project_name || payload?.projectName || "",
       po_no: payload?.doc?.po_no || payload?.po_no || payload?.poNo || "",
       signature_image_url: payload?.doc?.signature_image_url || "",
+      contact_name: payload?.doc?.contact_name || "",
+      contact_title: payload?.doc?.contact_title || "",
+      contact_phone: payload?.doc?.contact_phone || "",
+      contact_email: payload?.doc?.contact_email || "",
     },
     vendor: normalizeVendor(payload),
     items,
@@ -1219,10 +1257,119 @@ function normalizeGoodsReceiptPayload(payload) {
       discount_total,
       after_discount,
       vat,
+      vat_rate,
+      vat_rate_display,
       total,
       total_text,
       exempt_amount,
       taxable_amount,
+    },
+  };
+}
+
+function normalizeExpenseBillPayload(payload) {
+  const rawItems = Array.isArray(payload?.items) ? payload.items : [];
+  const items = rawItems.map((it, idx) => ({
+    no: idx + 1,
+    name: it?.name || it?.item_name || "-",
+    description: it?.description || it?.detail || it?.details || it?.desc || "",
+    category: it?.category || "",
+    qty: Number(it?.qty || 0),
+    unit: it?.unit || "รายการ",
+    price: Number((it?.price ?? it?.unit_price) || 0),
+    discount_display: it?.discount_display || "-",
+    tax_display: it?.tax_display || "-",
+    line_total: round2(it?.line_total ?? it?.amount ?? (Number(it?.qty || 0) * Number((it?.price ?? it?.unit_price) || 0))),
+  }));
+
+  const grossFromClient = payload?.summary?.gross_subtotal;
+  const grossComputed = round2(items.reduce((s, x) => s + Number(x.qty || 0) * Number(x.price || 0), 0));
+  const gross_subtotal = round2(parseNumberLoose(grossFromClient) || grossComputed);
+
+  const afterDiscountComputed = round2(items.reduce((s, x) => s + Number(x.line_total || 0), 0));
+  const after_discount = round2(parseNumberLoose(payload?.summary?.after_discount) || afterDiscountComputed);
+  const discount_total = round2(parseNumberLoose(payload?.summary?.discount_total) || Math.max(gross_subtotal - after_discount, 0));
+
+  const vat_enabled = payload?.summary?.vat_enabled !== false;
+  const vat = round2(vat_enabled ? parseNumberLoose(payload?.summary?.vat) : 0);
+  const total = round2(parseNumberLoose(payload?.summary?.total) || after_discount + vat);
+
+  const isTaxable = vat > 0;
+  const exempt_amount = round2(
+    parseNumberLoose(payload?.summary?.exempt_amount) || (isTaxable ? 0 : after_discount)
+  );
+  const taxable_amount = round2(
+    parseNumberLoose(payload?.summary?.taxable_amount) || (isTaxable ? after_discount : 0)
+  );
+  // vat_rate — อัตราภาษีจริงที่ระบบ TPR เลือกใช้ (มาสเตอร์ tpr_vat_rates); ไม่มีอัตราตายตัวอีกต่อไป fallback 7 ไว้เผื่อ payload เก่าที่ยังไม่ส่งค่านี้มา
+  const vat_rate = isTaxable ? round2(parseNumberLoose(payload?.summary?.vat_rate) || 7) : 0;
+  const vat_rate_display = isTaxable && vat_rate > 0
+    ? vat_rate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
+
+  const wht_enabled = !!payload?.summary?.wht_enabled;
+  const wht_percent = round2(parseNumberLoose(payload?.summary?.wht_percent));
+  const wht_amount = wht_enabled ? round2(parseNumberLoose(payload?.summary?.wht_amount)) : 0;
+  const net_payable = round2(parseNumberLoose(payload?.summary?.net_payable) || (wht_enabled ? total - wht_amount : total));
+
+  const totalTextFromClient =
+    typeof payload?.summary?.total_text === "string" && payload.summary.total_text.trim()
+      ? payload.summary.total_text.trim()
+      : "";
+  const total_text = totalTextFromClient || thaiBahtText(net_payable);
+
+  // mirror normalizeTaxReceiptPayload เป๊ะ — แสดงเฉพาะรายการชำระล่าสุด 1 รายการ
+  const paymentRaw = payload?.payment || null;
+  const payment = paymentRaw ? {
+    method:      paymentRaw.method || "",
+    is_cheque:   !!paymentRaw.is_cheque,
+    date:        paymentRaw.date || "",
+    amount:      round2(paymentRaw.amount || 0),
+    bank_name:   paymentRaw.bank_name || "",
+    cheque_no:   paymentRaw.cheque_no || "",
+    cheque_date: paymentRaw.cheque_date || "",
+  } : null;
+
+  return {
+    css_inline: cssInline,
+    company: normalizeCompany(payload),
+    doc: {
+      number: payload?.doc?.number || payload?.docNumber || "EXP-DEV-0001",
+      date: payload?.doc?.date || payload?.docDate || "10/01/2026",
+      due_date: payload?.doc?.due_date || payload?.dueDate || "",
+      credit_days: payload?.doc?.credit_days || "",
+      reference_no: payload?.doc?.reference_no || "",
+      project_name: payload?.doc?.project_name || payload?.project_name || payload?.projectName || "",
+      prepared_by: payload?.doc?.prepared_by || "",
+      signature_image_url: payload?.doc?.signature_image_url || "",
+      contact_name: payload?.doc?.contact_name || "",
+      contact_title: payload?.doc?.contact_title || "",
+      contact_phone: payload?.doc?.contact_phone || "",
+      contact_email: payload?.doc?.contact_email || "",
+    },
+    vendor: normalizeVendor(payload),
+    items,
+    payment,
+    notes: {
+      title: payload?.notes?.title || payload?.note_title || payload?.noteTitle || "หมายเหตุ :",
+      text: payload?.notes?.text || payload?.notes || payload?.note || payload?.remark || "",
+    },
+    summary: {
+      gross_subtotal,
+      discount_total,
+      after_discount,
+      exempt_amount,
+      taxable_amount,
+      vat,
+      vat_rate,
+      vat_rate_display,
+      vat_enabled,
+      total,
+      wht_enabled,
+      wht_percent,
+      wht_amount,
+      net_payable,
+      total_text,
     },
   };
 }
@@ -1283,6 +1430,11 @@ function normalizeTaxReceiptPayload(payload) {
     ?? (deposit_return > 0 ? Math.max(after_discount - deposit_return, 0) : after_discount));
   const vat    = round2(payloadSummary?.vat ?? computedSummary.vat);
   const total  = round2(payloadSummary?.total ?? round2(after_deposit + (vatEnabled ? vat : 0)));
+  // vat_rate — อัตราภาษีจริงที่ระบบ TPR เลือกใช้ (มาสเตอร์ tpr_vat_rates); ไม่มีอัตราตายตัวอีกต่อไป fallback 7 ไว้เผื่อ payload เก่าที่ยังไม่ส่งค่านี้มา
+  const vatRate = vatEnabled ? round2(payloadSummary?.vat_rate ?? 7) : 0;
+  const vatRateDisplay = vatEnabled && vatRate > 0
+    ? vatRate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
 
   // รายการปรับลด/ปรับเพิ่มระดับเอกสาร — ปรับหลัง "รวมทั้งสิ้น" ก่อนหัก ณ ที่จ่าย
   const adjustmentEnabled = !!payloadSummary?.adjustment_enabled;
@@ -1311,6 +1463,8 @@ function normalizeTaxReceiptPayload(payload) {
     after_deposit,
     vat_enabled: vatEnabled,
     vat,
+    vat_rate: vatRate,
+    vat_rate_display: vatRateDisplay,
     total,
     adjustment_enabled: adjustmentEnabled,
     adjustment_label:   payloadSummary?.adjustment_label || "",
@@ -2253,6 +2407,14 @@ makeDocRoutes({
   templateFn: templates.goods_receipt,
   normalizer: normalizeGoodsReceiptPayload,
   filename: "tpr_goods_receipt.pdf",
+});
+
+// ----- Expense Bill -----
+makeDocRoutes({
+  basePath: "/tpr-expense-bill",
+  templateFn: templates.expense_bill,
+  normalizer: normalizeExpenseBillPayload,
+  filename: "tpr_expense_bill.pdf",
 });
 
 // ----- Receipt -----
