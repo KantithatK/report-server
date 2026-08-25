@@ -81,6 +81,7 @@
     .qtable tbody tr.item-row td { border: 1px solid #000; height: 18px; }
     .qtable tbody tr.summary-start td { padding-top: 8px; }
     .qtable tbody tr.last-summary td { padding-bottom: 7px; }
+    .qtable tbody tr.wht-divider td { border-top: 1px solid #000 !important; padding-top: 6px; }
 
     .col-no { width: 40px; }
     .col-desc { width: auto; }
@@ -166,12 +167,12 @@
           <div class="logo-text">โลโก้</div>
           {{/if}}
         </div>
-        <div class="company-name">{{company.name}} (สำนักงานใหญ่)</div>
-        <div class="company-sub">{{company.address}}</div>
+        <div class="company-name">{{company.name}}</div>
+        <div class="company-sub">{{#if company.branch}}{{company.branch}} {{/if}}{{company.address_line1}}</div>
+        {{#if company.address_line2}}<div class="company-sub">{{company.address_line2}}</div>{{/if}}
         <div class="company-sub">เลขประจำตัวผู้เสียภาษี {{company.tax_id}}</div>
-        {{#if company.phone}}<div class="company-sub">โทร. {{company.phone}}</div>{{/if}}
-        {{#if company.mobile}}<div class="company-sub">เบอร์มือถือ {{company.mobile}}</div>{{/if}}
-        {{#if company.email}}<div class="company-sub">{{company.email}}</div>{{/if}}
+        {{#if company.phone}}<div class="company-sub">โทรศัพท์ {{company.phone}}{{#if company.mobile}} เบอร์มือถือ {{company.mobile}}{{/if}}</div>{{else}}{{#if company.mobile}}<div class="company-sub">เบอร์มือถือ {{company.mobile}}</div>{{/if}}{{/if}}
+        {{#if company.email}}<div class="company-sub">Email : {{company.email}}</div>{{/if}}
         {{#if company.fax}}<div class="company-sub">โทรสาร {{company.fax}}</div>{{/if}}
         {{#if company.website}}<div class="company-sub">{{company.website}}</div>{{/if}}
 
@@ -291,8 +292,10 @@
           <td class="summary-value">{{money summary.vat}} บาท</td>
         </tr>
         {{/if}}
-        <tr>
-          <td colspan="3" class="no-border"></td>
+        <tr class="{{#unless summary.has_trailing_rows}}last-summary{{/unless}}">
+          <td colspan="3" class="no-border amount-words-cell">
+            ({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}})
+          </td>
           <td colspan="2" class="summary-label no-border-left">จำนวนเงินรวมทั้งสิ้น</td>
           <td class="summary-value">{{money summary.total}} บาท</td>
         </tr>
@@ -313,30 +316,23 @@
 
         <!-- บล็อกที่ 2: หัก ณ ที่จ่าย/ยอดชำระ — เป็นข้อมูลฝั่งการรับเงินจริง ไม่ใช่มูลค่าตามใบกำกับภาษี -->
         {{#if summary.wht_enabled}}
-        <tr>
+        <tr class="wht-divider">
           <td colspan="3" class="no-border"></td>
           <td colspan="2" class="summary-label no-border-left">หักภาษี ณ ที่จ่าย{{#if summary.withholding_percent_display}} {{summary.withholding_percent_display}}%{{/if}}</td>
           <td class="summary-value">{{money summary.withholding}} บาท</td>
         </tr>
-        <tr>
+        <tr class="last-summary">
           <td colspan="3" class="no-border"></td>
           <td colspan="2" class="summary-label no-border-left">ยอดชำระ</td>
           <td class="summary-value">{{money summary.net_total}} บาท</td>
         </tr>
         {{else if summary.adjustment_enabled}}
-        <tr>
+        <tr class="last-summary">
           <td colspan="3" class="no-border"></td>
           <td colspan="2" class="summary-label no-border-left">ยอดชำระ</td>
           <td class="summary-value">{{money summary.net_total}} บาท</td>
         </tr>
         {{/if}}
-
-        <!-- จำนวนเงินเป็นตัวอักษร — วางแยกเป็นแถวเต็มความกว้างด้านล่างสุดของสรุปยอด ระบุยอด "รวมทั้งสิ้น" ตามหลักใบกำกับภาษี -->
-        <tr class="last-summary">
-          <td colspan="6" class="amount-words-cell">
-            ({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}})
-          </td>
-        </tr>
       </tbody>
     </table>
 

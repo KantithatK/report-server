@@ -723,6 +723,8 @@ function normalizeCompany(payload) {
       payload?.branch ||
       "",
     address: payload?.company?.address || "99/1 ถนนสุขุมวิท แขวงบางนา เขตบางนา กรุงเทพฯ 10260",
+    address_line1: payload?.company?.address_line1 || "",
+    address_line2: payload?.company?.address_line2 || "",
     tax_id: payload?.company?.tax_id || "010555xxxxx",
     phone: payload?.company?.phone || "02-xxx-xxxx",
     mobile: payload?.company?.mobile || "",
@@ -1078,6 +1080,11 @@ function normalizePurchaseOrderPayload(payload) {
 
   const discount = Number(payload?.discount || payload?.summary?.discount || 0);
   const computed = computePurchaseOrderSummary(items, discount);
+  const normalizeRate = (value) => {
+    const n = Number(value || 0);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return n > 1 ? n / 100 : n;
+  };
 
   const subtotalFromClient = payload?.summary?.subtotal ?? payload?.subtotal;
   const vatFromClient = payload?.summary?.vat ?? payload?.vat;
@@ -1114,6 +1121,18 @@ function normalizePurchaseOrderPayload(payload) {
   const vat_rate_display = isTaxable && vat_rate > 0
     ? vat_rate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
     : "";
+
+  // หัก ณ ที่จ่าย — ไม่มีค่าเริ่มต้น (ต่างจากใบเสนอราคา/ใบแจ้งหนี้) เพราะไม่ใช่ทุกใบสั่งซื้อที่หัก
+  const withholding_rate = normalizeRate(payload?.withholding_rate ?? payload?.summary?.withholding_rate);
+  const wht_enabled = !!payload?.summary?.wht_enabled;
+  const wht_percent = withholding_rate > 0 ? round2(withholding_rate * 100) : 0;
+  const withholding_percent_display = wht_percent > 0
+    ? wht_percent.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
+  const withholding = wht_enabled
+    ? round2(parseNumberLoose(payload?.summary?.withholding) || after_discount * withholding_rate)
+    : 0;
+  const net_total = round2(parseNumberLoose(payload?.summary?.net_total) || (total - withholding));
 
   return {
     css_inline: cssInline,
@@ -1161,6 +1180,12 @@ function normalizePurchaseOrderPayload(payload) {
       total_text,
       exempt_amount,
       taxable_amount,
+      withholding,
+      wht_percent,
+      withholding_rate,
+      withholding_percent_display,
+      wht_enabled,
+      net_total,
     },
     closing_message:
       payload?.closing_message ||
@@ -1192,6 +1217,11 @@ function normalizeGoodsReceiptPayload(payload) {
 
   const discount = Number(payload?.discount || payload?.summary?.discount || 0);
   const computed = computePurchaseOrderSummary(items, discount);
+  const normalizeRate = (value) => {
+    const n = Number(value || 0);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return n > 1 ? n / 100 : n;
+  };
 
   const subtotalFromClient = payload?.summary?.subtotal ?? payload?.subtotal;
   const vatFromClient = payload?.summary?.vat ?? payload?.vat;
@@ -1229,6 +1259,18 @@ function normalizeGoodsReceiptPayload(payload) {
     ? vat_rate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
     : "";
 
+  // หัก ณ ที่จ่าย — ไม่มีค่าเริ่มต้น (ต่างจากใบเสนอราคา/ใบแจ้งหนี้) เพราะไม่ใช่ทุกใบรับสินค้าที่หัก
+  const withholding_rate = normalizeRate(payload?.withholding_rate ?? payload?.summary?.withholding_rate);
+  const wht_enabled = !!payload?.summary?.wht_enabled;
+  const wht_percent = withholding_rate > 0 ? round2(withholding_rate * 100) : 0;
+  const withholding_percent_display = wht_percent > 0
+    ? wht_percent.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
+  const withholding = wht_enabled
+    ? round2(parseNumberLoose(payload?.summary?.withholding) || after_discount * withholding_rate)
+    : 0;
+  const net_total = round2(parseNumberLoose(payload?.summary?.net_total) || (total - withholding));
+
   return {
     css_inline: cssInline,
     company: normalizeCompany(payload),
@@ -1263,6 +1305,12 @@ function normalizeGoodsReceiptPayload(payload) {
       total_text,
       exempt_amount,
       taxable_amount,
+      withholding,
+      wht_percent,
+      withholding_rate,
+      withholding_percent_display,
+      wht_enabled,
+      net_total,
     },
   };
 }
@@ -1316,7 +1364,7 @@ function normalizeExpenseBillPayload(payload) {
     typeof payload?.summary?.total_text === "string" && payload.summary.total_text.trim()
       ? payload.summary.total_text.trim()
       : "";
-  const total_text = totalTextFromClient || thaiBahtText(net_payable);
+  const total_text = totalTextFromClient || thaiBahtText(total);
 
   // mirror normalizeTaxReceiptPayload เป๊ะ — แสดงเฉพาะรายการชำระล่าสุด 1 รายการ
   const paymentRaw = payload?.payment || null;
@@ -1478,6 +1526,8 @@ function normalizeTaxReceiptPayload(payload) {
     net_total,
     // จำนวนเงินเป็นตัวอักษร — ระบุยอด "รวมทั้งสิ้น" (ก่อนหัก ณ ที่จ่าย) ตามหลักใบกำกับภาษี ไม่ใช่ยอดชำระสุทธิ
     total_text: payloadSummary?.total_text || thaiBahtText(total),
+    // มีแถวต่อท้าย "จำนวนเงินรวมทั้งสิ้น" อีกหรือไม่ (ปรับลด/ปรับเพิ่ม หรือ หัก ณ ที่จ่าย) — ใช้กำหนดว่าแถวรวมทั้งสิ้นเป็นแถวสุดท้ายของสรุปยอดหรือไม่
+    has_trailing_rows: adjustmentEnabled || whtEnabled,
   };
 
   const payloadContact = payload?.contact || payload?.doc?.contact || {};
