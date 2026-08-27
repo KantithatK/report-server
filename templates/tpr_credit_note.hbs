@@ -196,6 +196,8 @@
           {{#if contact.email}}
           <div class="meta-row"><span class="mk">อีเมล</span><span class="mv">{{contact.email}}</span></div>
           {{/if}}
+          <!-- เหตุผลในการออกใบลดหนี้ — บังคับตามกฎหมาย ม. 86/10 แสดงเสมอ (fallback "-" เมื่อว่าง) -->
+          <div class="meta-row"><span class="mk">เหตุผล</span><span class="mv">{{#if reason.text}}{{reason.text}}{{else}}-{{/if}}</span></div>
         </div>
       </div>
     </div>
@@ -272,12 +274,6 @@
         </tr>
       </tbody>
     </table>
-
-    <!-- เหตุผลในการออกใบลดหนี้ — บังคับตามกฎหมาย ม. 86/10 คนละส่วนกับหมายเหตุทั่วไป -->
-    <div class="footer-note">
-      <div class="note-title">เหตุผลในการออกใบลดหนี้</div>
-      <div class="note-text">{{#if reason.text}}{{reason.text}}{{else}}-{{/if}}</div>
-    </div>
 
     <!-- หมายเหตุ -->
     <div class="footer-note">
