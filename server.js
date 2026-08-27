@@ -662,22 +662,6 @@ function computeQuotationSummary(items, discount = 0, withholdingRate = 0.03) {
   };
 }
 
-// Credit Note: diff = correct - original
-function computeCreditNoteSummary(originalTotal = 0, correctTotal = 0) {
-  const original = round2(originalTotal);
-  const correct = round2(correctTotal);
-  const diff = round2(correct - original);
-
-  return {
-    original_total: original,
-    correct_total: correct,
-    diff_total: diff,
-    diff_text: thaiBahtText(diff),
-    original_total_text: thaiBahtText(original),
-    correct_total_text: thaiBahtText(correct),
-  };
-}
-
 // Receipt
 function computeReceiptSummary(items, deposit = 0) {
   const subtotal = items.reduce((s, x) => s + Number(x.line_total || 0), 0);
@@ -949,46 +933,100 @@ function normalizeQuotationPayload(payload) {
 
 function normalizeCreditNotePayload(payload) {
   const items = normalizeItems(payload);
+  const payloadSummary = payload?.summary || {};
+  const deposit_return = round2(
+    payloadSummary?.deposit_return ?? payload?.deposit_return ?? payload?.depositReturn ?? 0
+  );
+  const vatOverride =
+    payloadSummary?.vat != null        ? payloadSummary.vat :
+    payloadSummary?.vat_amount != null ? payloadSummary.vat_amount :
+    null;
+  const computedSummary = computeTaxReceiptSummary(items, deposit_return, vatOverride);
+
+  const subtotal       = round2(payloadSummary?.subtotal ?? computedSummary.subtotal);
+  const discount_total = round2(payloadSummary?.discount_total ?? 0);
+  const after_discount = round2(payloadSummary?.after_discount ?? Math.max(subtotal - discount_total, 0));
+  const vatEnabled      = payloadSummary?.vat_enabled !== false;
+  const after_deposit   = round2(payloadSummary?.after_deposit
+    ?? (deposit_return > 0 ? Math.max(after_discount - deposit_return, 0) : after_discount));
+  const vat    = round2(payloadSummary?.vat ?? computedSummary.vat);
+  const total  = round2(payloadSummary?.total ?? round2(after_deposit + (vatEnabled ? vat : 0)));
+  const vatRate = vatEnabled ? round2(payloadSummary?.vat_rate ?? payloadSummary?.vat_rate_display ?? 7) : 0;
+  const vatRateDisplay = vatEnabled && vatRate > 0
+    ? vatRate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
+
+  // รายการปรับลด/ปรับเพิ่มระดับเอกสาร — ปรับหลัง "รวมทั้งสิ้น" ก่อนหัก ณ ที่จ่าย
+  const adjustmentEnabled = !!payloadSummary?.adjustment_enabled;
+  const adjustmentAmount  = adjustmentEnabled ? round2(payloadSummary?.adjustment_amount ?? 0) : 0;
+  const afterAdjustment   = round2(payloadSummary?.after_adjustment ?? round2(total + adjustmentAmount));
+
+  const normalizeRate = (value) => {
+    const n = Number(value || 0);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return n > 1 ? n / 100 : n;
+  };
+  const withholdingRate = normalizeRate(payloadSummary?.withholding_rate ?? payloadSummary?.withholding_percent_display);
+  const whtEnabled = !!payloadSummary?.wht_enabled;
+  const withholding = round2(payloadSummary?.withholding ?? 0);
+  const withholdingPercentDisplay = payloadSummary?.withholding_percent_display
+    ? String(payloadSummary.withholding_percent_display)
+    : (withholdingRate > 0 ? round2(withholdingRate * 100).toLocaleString("th-TH", { maximumFractionDigits: 2 }) : "");
+  const net_total = round2(payloadSummary?.net_total ?? (whtEnabled ? afterAdjustment - withholding : afterAdjustment));
+
+  const summary = {
+    subtotal,
+    discount_total,
+    after_discount,
+    deposit_return,
+    after_deposit,
+    vat_enabled: vatEnabled,
+    vat,
+    vat_rate: vatRate,
+    vat_rate_display: vatRateDisplay,
+    total,
+    adjustment_enabled: adjustmentEnabled,
+    adjustment_label:   payloadSummary?.adjustment_label || "",
+    adjustment_amount:  adjustmentAmount,
+    after_adjustment:   afterAdjustment,
+    wht_enabled: whtEnabled,
+    withholding,
+    withholding_percent_display: withholdingPercentDisplay,
+    net_total,
+    total_text: payloadSummary?.total_text || thaiBahtText(total),
+    has_trailing_rows: adjustmentEnabled || whtEnabled,
+  };
+
+  const payloadContact = payload?.contact || payload?.doc?.contact || {};
 
   const ref = {
-    invoice_no: payload?.ref?.invoice_no || payload?.refInvoiceNo || "",
-    invoice_date: payload?.ref?.invoice_date || payload?.refInvoiceDate || "",
+    tax_receipt_no:   payload?.ref?.tax_receipt_no   || "",
+    tax_receipt_date: payload?.ref?.tax_receipt_date || "",
+    invoice_no:       payload?.ref?.invoice_no       || "",
+    invoice_date:     payload?.ref?.invoice_date     || "",
   };
-
-  const reason = {
-    text: payload?.reason?.text || payload?.reasonText || "",
-  };
-
-  const originalTotal = payload?.summary?.original_total ?? payload?.original_total ?? payload?.originalTotal ?? 0;
-  const correctTotal = payload?.summary?.correct_total ?? payload?.correct_total ?? payload?.correctTotal ?? 0;
-
-  const baseSummary = computeCreditNoteSummary(originalTotal, correctTotal);
-
-  const vat = round2(payload?.summary?.vat ?? 0);
-  const grand_total = round2(payload?.summary?.grand_total ?? (baseSummary.diff_total + vat));
-
-  const diff_text =
-    typeof payload?.summary?.diff_text === "string" && payload.summary.diff_text.trim()
-      ? payload.summary.diff_text.trim()
-      : baseSummary.diff_text;
 
   return {
     css_inline: cssInline,
     company: normalizeCompany(payload),
     doc: {
-      number: payload?.doc?.number || payload?.docNumber || "CN-DEV-0001",
-      date: payload?.doc?.date || payload?.docDate || "10/01/2026",
+      number:       payload?.doc?.number       || payload?.docNumber || "CN-DEV-0001",
+      date:         payload?.doc?.date         || payload?.docDate   || "10/01/2026",
+      prepared_by:  payload?.doc?.prepared_by  || "",
+      project_name: payload?.doc?.project_name || "",
+      signature_image_url: payload?.doc?.signature_image_url || "",
     },
     customer: normalizeCustomer(payload),
-    ref,
-    reason,
-    items,
-    summary: {
-      ...baseSummary,
-      vat,
-      grand_total,
-      diff_text,
+    contact: {
+      name:  payloadContact?.name  || "",
+      title: payloadContact?.title || "",
+      phone: payloadContact?.phone || "",
+      email: payloadContact?.email || "",
     },
+    ref,
+    note: payload?.note || "",
+    items,
+    summary,
   };
 }
 
