@@ -956,23 +956,12 @@ function normalizeCreditNotePayload(payload) {
     ? vatRate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
     : "";
 
-  // รายการปรับลด/ปรับเพิ่มระดับเอกสาร — ปรับหลัง "รวมทั้งสิ้น" ก่อนหัก ณ ที่จ่าย
+  // รายการปรับลด/ปรับเพิ่มระดับเอกสาร — ปรับหลัง "รวมทั้งสิ้น" (ยอดสุดท้ายของใบลดหนี้)
+  // ไม่มีหัก ณ ที่จ่ายบนใบลดหนี้ — WHT ผูกกับตอนจ่ายเงินจริง ไม่ใช่ตอนลดยอดขาย/ภาษีขาย ตามหลัก ม.86/10
   const adjustmentEnabled = !!payloadSummary?.adjustment_enabled;
   const adjustmentAmount  = adjustmentEnabled ? round2(payloadSummary?.adjustment_amount ?? 0) : 0;
   const afterAdjustment   = round2(payloadSummary?.after_adjustment ?? round2(total + adjustmentAmount));
-
-  const normalizeRate = (value) => {
-    const n = Number(value || 0);
-    if (!Number.isFinite(n) || n <= 0) return 0;
-    return n > 1 ? n / 100 : n;
-  };
-  const withholdingRate = normalizeRate(payloadSummary?.withholding_rate ?? payloadSummary?.withholding_percent_display);
-  const whtEnabled = !!payloadSummary?.wht_enabled;
-  const withholding = round2(payloadSummary?.withholding ?? 0);
-  const withholdingPercentDisplay = payloadSummary?.withholding_percent_display
-    ? String(payloadSummary.withholding_percent_display)
-    : (withholdingRate > 0 ? round2(withholdingRate * 100).toLocaleString("th-TH", { maximumFractionDigits: 2 }) : "");
-  const net_total = round2(payloadSummary?.net_total ?? (whtEnabled ? afterAdjustment - withholding : afterAdjustment));
+  const net_total = round2(payloadSummary?.net_total ?? afterAdjustment);
 
   const summary = {
     subtotal,
@@ -989,12 +978,8 @@ function normalizeCreditNotePayload(payload) {
     adjustment_label:   payloadSummary?.adjustment_label || "",
     adjustment_amount:  adjustmentAmount,
     after_adjustment:   afterAdjustment,
-    wht_enabled: whtEnabled,
-    withholding,
-    withholding_percent_display: withholdingPercentDisplay,
     net_total,
     total_text: payloadSummary?.total_text || thaiBahtText(total),
-    has_trailing_rows: adjustmentEnabled || whtEnabled,
   };
 
   const payloadContact = payload?.contact || payload?.doc?.contact || {};
@@ -1004,6 +989,10 @@ function normalizeCreditNotePayload(payload) {
     tax_receipt_date: payload?.ref?.tax_receipt_date || "",
     invoice_no:       payload?.ref?.invoice_no       || "",
     invoice_date:     payload?.ref?.invoice_date     || "",
+  };
+
+  const reason = {
+    text: payload?.reason?.text || payload?.reasonText || "",
   };
 
   return {
@@ -1024,6 +1013,7 @@ function normalizeCreditNotePayload(payload) {
       email: payloadContact?.email || "",
     },
     ref,
+    reason,
     note: payload?.note || "",
     items,
     summary,

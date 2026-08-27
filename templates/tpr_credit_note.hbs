@@ -179,13 +179,7 @@
           <div class="meta-row"><span class="mk">ผู้ขาย</span><span class="mv">{{doc.prepared_by}}</span></div>
           {{/if}}
           {{#if ref.tax_receipt_no}}
-          <div class="meta-row"><span class="mk">อ้างอิงใบกำกับภาษี</span><span class="mv">{{ref.tax_receipt_no}}</span></div>
-          {{/if}}
-          {{#if ref.tax_receipt_date}}
-          <div class="meta-row"><span class="mk">วันที่</span><span class="mv">{{ref.tax_receipt_date}}</span></div>
-          {{/if}}
-          {{#if ref.invoice_no}}
-          <div class="meta-row"><span class="mk">อ้างอิงใบวางบิล</span><span class="mv">{{ref.invoice_no}}</span></div>
+          <div class="meta-row"><span class="mk">อ้างอิง TAX</span><span class="mv">{{ref.tax_receipt_no}}</span></div>
           {{/if}}
         </div>
 
@@ -280,7 +274,7 @@
           <td class="summary-value">{{money summary.vat}} บาท</td>
         </tr>
         {{/if}}
-        <tr class="{{#unless summary.has_trailing_rows}}last-summary{{/unless}}">
+        <tr class="{{#unless summary.adjustment_enabled}}last-summary{{/unless}}">
           <td colspan="3" class="no-border-right amount-words-cell">
             ({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}})
           </td>
@@ -288,40 +282,28 @@
           <td class="summary-value">{{money summary.total}} บาท</td>
         </tr>
 
-        <!-- รายการปรับลด/ปรับเพิ่มระดับเอกสาร (เช่น เงินประกันผลงาน/ค่านายหน้า/ปัดเศษ) — คนละจุดกับหัก ณ ที่จ่าย -->
+        <!-- รายการปรับลด/ปรับเพิ่มระดับเอกสาร (เช่น เงินประกันผลงาน/ค่านายหน้า/ปัดเศษ) -->
+        <!-- ไม่มีหัก ณ ที่จ่ายบนใบลดหนี้ — WHT ผูกกับตอนจ่ายเงินจริง ไม่ใช่ตอนลดยอดขาย/ภาษีขาย ตามหลัก ม.86/10 -->
         {{#if summary.adjustment_enabled}}
         <tr>
           <td colspan="3" class="no-border"></td>
           <td colspan="2" class="summary-label no-border-left">{{#if summary.adjustment_label}}{{summary.adjustment_label}}{{else}}ปรับลด/ปรับเพิ่ม{{/if}}</td>
           <td class="summary-value">{{money summary.adjustment_amount}} บาท</td>
         </tr>
-        <tr>
-          <td colspan="3" class="no-border"></td>
+        <tr class="last-summary">
+          <td colspan="3" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">ยอดหลังปรับ</td>
           <td class="summary-value">{{money summary.after_adjustment}} บาท</td>
         </tr>
         {{/if}}
-
-        {{#if summary.wht_enabled}}
-        <tr class="wht-divider">
-          <td colspan="3" class="no-border-right"></td>
-          <td colspan="2" class="summary-label no-border-left">หักภาษี ณ ที่จ่าย{{#if summary.withholding_percent_display}} {{summary.withholding_percent_display}}%{{/if}}</td>
-          <td class="summary-value">{{money summary.withholding}} บาท</td>
-        </tr>
-        <tr class="last-summary">
-          <td colspan="3" class="no-border-right"></td>
-          <td colspan="2" class="summary-label no-border-left">ยอดชำระ</td>
-          <td class="summary-value">{{money summary.net_total}} บาท</td>
-        </tr>
-        {{else if summary.adjustment_enabled}}
-        <tr class="last-summary">
-          <td colspan="3" class="no-border-right"></td>
-          <td colspan="2" class="summary-label no-border-left">ยอดชำระ</td>
-          <td class="summary-value">{{money summary.net_total}} บาท</td>
-        </tr>
-        {{/if}}
       </tbody>
     </table>
+
+    <!-- เหตุผลในการออกใบลดหนี้ — บังคับตามกฎหมาย ม. 86/10 คนละส่วนกับหมายเหตุทั่วไป -->
+    <div class="footer-note">
+      <div class="note-title">เหตุผลในการออกใบลดหนี้</div>
+      <div class="note-text">{{#if reason.text}}{{reason.text}}{{else}}-{{/if}}</div>
+    </div>
 
     <!-- หมายเหตุ -->
     <div class="footer-note">
