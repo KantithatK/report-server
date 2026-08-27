@@ -931,53 +931,38 @@ function normalizeQuotationPayload(payload) {
   };
 }
 
+// ใบลดหนี้ตาม ม.86/10 มีหน้าที่แค่ปรับลดยอดขาย/ภาษีขาย — ไม่มีชั้นปรับยอด/หักคืนเงินจำ/หัก ณ ที่จ่าย
+// เหมือนเอกสารรับเงิน เพราะ "จำนวนเงินรวมทั้งสิ้น" ต้องตรงกับภาษีขายที่ยื่นจริงเป๊ะ
 function normalizeCreditNotePayload(payload) {
   const items = normalizeItems(payload);
   const payloadSummary = payload?.summary || {};
-  const deposit_return = round2(
-    payloadSummary?.deposit_return ?? payload?.deposit_return ?? payload?.depositReturn ?? 0
-  );
   const vatOverride =
     payloadSummary?.vat != null        ? payloadSummary.vat :
     payloadSummary?.vat_amount != null ? payloadSummary.vat_amount :
     null;
-  const computedSummary = computeTaxReceiptSummary(items, deposit_return, vatOverride);
+  const computedSummary = computeTaxReceiptSummary(items, 0, vatOverride);
 
   const subtotal       = round2(payloadSummary?.subtotal ?? computedSummary.subtotal);
   const discount_total = round2(payloadSummary?.discount_total ?? 0);
   const after_discount = round2(payloadSummary?.after_discount ?? Math.max(subtotal - discount_total, 0));
   const vatEnabled      = payloadSummary?.vat_enabled !== false;
-  const after_deposit   = round2(payloadSummary?.after_deposit
-    ?? (deposit_return > 0 ? Math.max(after_discount - deposit_return, 0) : after_discount));
   const vat    = round2(payloadSummary?.vat ?? computedSummary.vat);
-  const total  = round2(payloadSummary?.total ?? round2(after_deposit + (vatEnabled ? vat : 0)));
+  const total  = round2(payloadSummary?.total ?? round2(after_discount + (vatEnabled ? vat : 0)));
   const vatRate = vatEnabled ? round2(payloadSummary?.vat_rate ?? payloadSummary?.vat_rate_display ?? 7) : 0;
   const vatRateDisplay = vatEnabled && vatRate > 0
     ? vatRate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
     : "";
-
-  // รายการปรับลด/ปรับเพิ่มระดับเอกสาร — ปรับหลัง "รวมทั้งสิ้น" (ยอดสุดท้ายของใบลดหนี้)
-  // ไม่มีหัก ณ ที่จ่ายบนใบลดหนี้ — WHT ผูกกับตอนจ่ายเงินจริง ไม่ใช่ตอนลดยอดขาย/ภาษีขาย ตามหลัก ม.86/10
-  const adjustmentEnabled = !!payloadSummary?.adjustment_enabled;
-  const adjustmentAmount  = adjustmentEnabled ? round2(payloadSummary?.adjustment_amount ?? 0) : 0;
-  const afterAdjustment   = round2(payloadSummary?.after_adjustment ?? round2(total + adjustmentAmount));
-  const net_total = round2(payloadSummary?.net_total ?? afterAdjustment);
+  const net_total = round2(payloadSummary?.net_total ?? total);
 
   const summary = {
     subtotal,
     discount_total,
     after_discount,
-    deposit_return,
-    after_deposit,
     vat_enabled: vatEnabled,
     vat,
     vat_rate: vatRate,
     vat_rate_display: vatRateDisplay,
     total,
-    adjustment_enabled: adjustmentEnabled,
-    adjustment_label:   payloadSummary?.adjustment_label || "",
-    adjustment_amount:  adjustmentAmount,
-    after_adjustment:   afterAdjustment,
     net_total,
     total_text: payloadSummary?.total_text || thaiBahtText(total),
   };

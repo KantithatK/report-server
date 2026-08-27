@@ -237,7 +237,8 @@
         </tr>
         {{/each}}
 
-        <!-- บล็อกที่ 1: รวมเป็นเงิน → (ส่วนลด/หักคืนเงินจำ) → VAT → จำนวนเงินรวมทั้งสิ้น -->
+        <!-- ใบลดหนี้ตาม ม.86/10 มีหน้าที่แค่ปรับลดยอดขาย/ภาษีขาย — ไม่มีชั้นปรับยอด/หักคืนเงินจำ/หัก ณ ที่จ่าย
+             เหมือนเอกสารรับเงิน เพราะ "จำนวนเงินรวมทั้งสิ้น" ต้องตรงกับภาษีขายที่ยื่นจริงเป๊ะ -->
         <tr class="summary-start">
           <td colspan="3" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">รวมเป็นเงิน</td>
@@ -255,18 +256,6 @@
           <td class="summary-value">{{money summary.after_discount}} บาท</td>
         </tr>
         {{/if}}
-        {{#if summary.deposit_return}}
-        <tr>
-          <td colspan="3" class="no-border"></td>
-          <td colspan="2" class="summary-label no-border-left">หักคืนเงินจำ</td>
-          <td class="summary-value">-{{money summary.deposit_return}} บาท</td>
-        </tr>
-        <tr>
-          <td colspan="3" class="no-border"></td>
-          <td colspan="2" class="summary-label no-border-left">มูลค่าหลังหักเงินจำ</td>
-          <td class="summary-value">{{money summary.after_deposit}} บาท</td>
-        </tr>
-        {{/if}}
         {{#if summary.vat_enabled}}
         <tr>
           <td colspan="3" class="no-border-right"></td>
@@ -274,28 +263,13 @@
           <td class="summary-value">{{money summary.vat}} บาท</td>
         </tr>
         {{/if}}
-        <tr class="{{#unless summary.adjustment_enabled}}last-summary{{/unless}}">
+        <tr class="last-summary">
           <td colspan="3" class="no-border-right amount-words-cell">
             ({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}})
           </td>
           <td colspan="2" class="summary-label no-border-left">จำนวนเงินรวมทั้งสิ้น</td>
           <td class="summary-value">{{money summary.total}} บาท</td>
         </tr>
-
-        <!-- รายการปรับลด/ปรับเพิ่มระดับเอกสาร (เช่น เงินประกันผลงาน/ค่านายหน้า/ปัดเศษ) -->
-        <!-- ไม่มีหัก ณ ที่จ่ายบนใบลดหนี้ — WHT ผูกกับตอนจ่ายเงินจริง ไม่ใช่ตอนลดยอดขาย/ภาษีขาย ตามหลัก ม.86/10 -->
-        {{#if summary.adjustment_enabled}}
-        <tr>
-          <td colspan="3" class="no-border"></td>
-          <td colspan="2" class="summary-label no-border-left">{{#if summary.adjustment_label}}{{summary.adjustment_label}}{{else}}ปรับลด/ปรับเพิ่ม{{/if}}</td>
-          <td class="summary-value">{{money summary.adjustment_amount}} บาท</td>
-        </tr>
-        <tr class="last-summary">
-          <td colspan="3" class="no-border-right"></td>
-          <td colspan="2" class="summary-label no-border-left">ยอดหลังปรับ</td>
-          <td class="summary-value">{{money summary.after_adjustment}} บาท</td>
-        </tr>
-        {{/if}}
       </tbody>
     </table>
 
