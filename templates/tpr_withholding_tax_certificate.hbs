@@ -181,7 +181,7 @@
 
     .sig-area {
       border: 1px solid #000;
-      padding: 2mm;
+      padding: 3mm 3mm 4mm;
       display: flex;
       gap: 6mm;
       align-items: stretch;
@@ -342,11 +342,11 @@
           <div style="margin-left:auto;">
             <div class="right"><b>เลขประจำตัวผู้เสียภาษีอากร</b>
               <span class="id-box" aria-label="เลขประจำตัวผู้เสียภาษี">
-                {{#each withholder.tax_id_boxes.p1}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
-                {{#each withholder.tax_id_boxes.p2}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
-                {{#each withholder.tax_id_boxes.p3}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
-                {{#each withholder.tax_id_boxes.p4}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
-                {{#each withholder.tax_id_boxes.p5}}<span class="digit">{{{this}}}</span>{{/each}}
+                {{#each withholder.tax_id_boxes_blank.p1}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes_blank.p2}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes_blank.p3}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes_blank.p4}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each withholder.tax_id_boxes_blank.p5}}<span class="digit">{{{this}}}</span>{{/each}}
               </span>
             </div>
           </div>
@@ -382,11 +382,11 @@
           <div style="margin-left:auto;">
             <div class="right"><b>เลขประจำตัวผู้เสียภาษีอากร</b>
               <span class="id-box" aria-label="เลขประจำตัวผู้เสียภาษี">
-                {{#each payee.tax_id_boxes.p1}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
-                {{#each payee.tax_id_boxes.p2}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
-                {{#each payee.tax_id_boxes.p3}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
-                {{#each payee.tax_id_boxes.p4}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
-                {{#each payee.tax_id_boxes.p5}}<span class="digit">{{{this}}}</span>{{/each}}
+                {{#each payee.tax_id_boxes_blank.p1}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes_blank.p2}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes_blank.p3}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes_blank.p4}}<span class="digit">{{{this}}}</span>{{/each}}<span class="dash">-</span>
+                {{#each payee.tax_id_boxes_blank.p5}}<span class="digit">{{{this}}}</span>{{/each}}
               </span>
             </div>
           </div>
@@ -450,9 +450,9 @@
                 {{label}}
                 {{#if other_text}} <span class="field w">{{safeText other_text ""}}</span>{{/if}}
               </td>
-              <td class="date">{{safeText date "-"}}</td>
-              <td class="num">{{moneyOrDash paid_amount}}</td>
-              <td class="num">{{moneyOrDash withheld_tax}}</td>
+              <td class="date">{{safeText date ""}}</td>
+              <td class="num">{{moneyOrBlank paid_amount}}</td>
+              <td class="num">{{moneyOrBlank withheld_tax}}</td>
             </tr>
             {{/each}}
 
@@ -478,9 +478,9 @@
 
       <div class="box mt1 avoid-break" style="font-size: 10pt;">
         <b>ผู้จ่ายเงิน</b>
-        <span class="cb {{#if payment.one_time}}checked{{else}}unchecked{{/if}}"></span> (1) ออกภาษีให้ครั้งเดียว
+        <span class="cb {{#if payment.withholding}}checked{{else}}unchecked{{/if}}"></span> (1) หักภาษี ณ ที่จ่าย
         <span class="cb {{#if payment.forever}}checked{{else}}unchecked{{/if}}"></span> (2) ออกภาษีให้ตลอดไป
-        <span class="cb {{#if payment.withholding}}checked{{else}}unchecked{{/if}}"></span> (3) หักภาษี ณ ที่จ่าย
+        <span class="cb {{#if payment.one_time}}checked{{else}}unchecked{{/if}}"></span> (3) ออกภาษีให้ครั้งเดียว
         <span class="cb {{#if payment.other}}checked{{else}}unchecked{{/if}}"></span> (4) อื่น ๆ (ระบุ) <span class="field">{{safeText payment.other_text ""}}</span>
       </div>
 
@@ -494,13 +494,13 @@
         <div class="sig-area sig-box">
           <div class="sig-left" style="margin-left: 10mm;">
             <div class="small">ขอรับรองว่าข้อความและตัวเลขดังกล่าวข้างต้นถูกต้องตรงกับความจริงทุกประการ</div>
-            <div class="mt1 small">
+            <div class="small" style="margin-top: 8mm;">
               ลงชื่อ <span class="field" style="min-width: 60mm;">{{safeText signer.name ""}}</span> ผู้จ่ายเงิน
             </div>
-            <div class="mt1 small">
+            <div class="small" style="margin-top: 3mm;">
               <span class="field" style="margin-left:30mm; min-width: 15mm;">{{safeText signer.date ""}}</span>
             </div>
-            <div class="mt1 small" style="margin-left:22mm">(วัน เดือน ปี ที่ออกหนังสือรับรอง)</div>
+            <div class="small" style="margin-top: 1mm; margin-left:22mm">(วัน เดือน ปี ที่ออกหนังสือรับรอง)</div>
           </div>
           <div class="sig-right">
             <div class="stamp">{{{stamp_text}}}</div>

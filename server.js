@@ -466,6 +466,15 @@ Handlebars.registerHelper("moneyOrDash", (v) => {
   return n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 });
 
+// money แต่ถ้าไม่ได้ส่งค่า (null/undefined/"") ให้ปล่อยว่างแทน (ต่างจาก moneyOrDash ที่ขึ้น "-")
+// ใช้กับแบบฟอร์มราชการที่พิมพ์ทุกแถวเสมอ (เช่นใบหัก ณ ที่จ่าย) ไม่อยากให้แถวที่ไม่มีข้อมูลรกด้วยขีด
+Handlebars.registerHelper("moneyOrBlank", (v) => {
+  if (v === null || v === undefined || v === "") return "";
+  const n = Number(String(v).replace(/,/g, ""));
+  if (!Number.isFinite(n)) return "";
+  return n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+});
+
 // แสดงจำนวนแบบมีเครื่องหมาย - เฉพาะกรณีติดลบ (เช่น ผลต่าง)
 Handlebars.registerHelper("moneySigned", (v) => {
   const n = Number(v || 0);
@@ -818,6 +827,19 @@ function toTaxIdBoxes(taxId) {
   });
 
   return { p1: parts[0], p2: parts[1], p3: parts[2], p4: parts[3], p5: parts[4] };
+}
+
+function toBlankTaxIdBoxes() {
+  // กล่องที่สองของแต่ละฝ่าย (ข้าง "ชื่อ") ตั้งใจให้เป็นช่องกรอบเปล่าเสมอ ไม่พิมพ์เลขซ้ำกับกล่องบน
+  const targetLengths = [1, 4, 5, 2, 1];
+  const blanks = (n) => Array.from({ length: n }, () => "&nbsp;");
+  return {
+    p1: blanks(targetLengths[0]),
+    p2: blanks(targetLengths[1]),
+    p3: blanks(targetLengths[2]),
+    p4: blanks(targetLengths[3]),
+    p5: blanks(targetLengths[4]),
+  };
 }
 
 function computeWithholdingTaxCertificateSummary(incomeRows, payloadSummary = {}) {
@@ -1589,6 +1611,7 @@ function normalizeWithholdingTaxCertificatePayload(payload) {
       "",
   };
   withholder.tax_id_boxes = toTaxIdBoxes(withholder.tax_id);
+  withholder.tax_id_boxes_blank = toBlankTaxIdBoxes();
 
   const payee = {
     name: payeeRaw?.name || payload?.payeeName || payload?.recipientName || "",
@@ -1601,6 +1624,7 @@ function normalizeWithholdingTaxCertificatePayload(payload) {
       "",
   };
   payee.tax_id_boxes = toTaxIdBoxes(payee.tax_id);
+  payee.tax_id_boxes_blank = toBlankTaxIdBoxes();
 
   const formType =
     (payload?.doc?.form_type || payload?.doc?.formType || payload?.form_type || payload?.formType || "").toString();
