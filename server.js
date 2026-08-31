@@ -185,6 +185,7 @@ function getMethodColor(method) {
 function routeLabelFromPath(url = "") {
   if (url.startsWith("/tpr-quotation")) return "QUOTATION";
   if (url.startsWith("/tpr-credit-note")) return "CREDIT_NOTE";
+  if (url.startsWith("/tpr-debit-note")) return "DEBIT_NOTE";
   if (url.startsWith("/tpr-invoice")) return "INVOICE";
   if (url.startsWith("/tpr-purchase-order")) return "PURCHASE_ORDER";
   if (url.startsWith("/tpr-goods-receipt")) return "GOODS_RECEIPT";
@@ -510,6 +511,7 @@ function compileTemplate(relPath) {
 const templates = {
   quotation: compileTemplate(path.join("templates", "tpr_quotation.hbs")),
   credit_note: compileTemplate(path.join("templates", "tpr_credit_note.hbs")),
+  debit_note: compileTemplate(path.join("templates", "tpr_debit_note.hbs")),
   invoice: compileTemplate(path.join("templates", "tpr_invoice.hbs")),
   purchase_order: compileTemplate(path.join("templates", "tpr_purchase_order.hbs")),
   goods_receipt: compileTemplate(path.join("templates", "tpr_goods_receipt.hbs")),
@@ -985,6 +987,78 @@ function normalizeCreditNotePayload(payload) {
     company: normalizeCompany(payload),
     doc: {
       number:       payload?.doc?.number       || payload?.docNumber || "CN-DEV-0001",
+      date:         payload?.doc?.date         || payload?.docDate   || "10/01/2026",
+      prepared_by:  payload?.doc?.prepared_by  || "",
+      project_name: payload?.doc?.project_name || "",
+      signature_image_url: payload?.doc?.signature_image_url || "",
+    },
+    customer: normalizeCustomer(payload),
+    contact: {
+      name:  payloadContact?.name  || "",
+      title: payloadContact?.title || "",
+      phone: payloadContact?.phone || "",
+      email: payloadContact?.email || "",
+    },
+    ref,
+    reason,
+    note: payload?.note || "",
+    items,
+    summary,
+  };
+}
+
+function normalizeDebitNotePayload(payload) {
+  const items = normalizeItems(payload);
+  const payloadSummary = payload?.summary || {};
+  const vatOverride =
+    payloadSummary?.vat != null        ? payloadSummary.vat :
+    payloadSummary?.vat_amount != null ? payloadSummary.vat_amount :
+    null;
+  const computedSummary = computeTaxReceiptSummary(items, 0, vatOverride);
+
+  const subtotal       = round2(payloadSummary?.subtotal ?? computedSummary.subtotal);
+  const discount_total = round2(payloadSummary?.discount_total ?? 0);
+  const after_discount = round2(payloadSummary?.after_discount ?? Math.max(subtotal - discount_total, 0));
+  const vatEnabled      = payloadSummary?.vat_enabled !== false;
+  const vat    = round2(payloadSummary?.vat ?? computedSummary.vat);
+  const total  = round2(payloadSummary?.total ?? round2(after_discount + (vatEnabled ? vat : 0)));
+  const vatRate = vatEnabled ? round2(payloadSummary?.vat_rate ?? payloadSummary?.vat_rate_display ?? 7) : 0;
+  const vatRateDisplay = vatEnabled && vatRate > 0
+    ? vatRate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
+    : "";
+  const net_total = round2(payloadSummary?.net_total ?? total);
+
+  const summary = {
+    subtotal,
+    discount_total,
+    after_discount,
+    vat_enabled: vatEnabled,
+    vat,
+    vat_rate: vatRate,
+    vat_rate_display: vatRateDisplay,
+    total,
+    net_total,
+    total_text: payloadSummary?.total_text || thaiBahtText(total),
+  };
+
+  const payloadContact = payload?.contact || payload?.doc?.contact || {};
+
+  const ref = {
+    tax_receipt_no:   payload?.ref?.tax_receipt_no   || "",
+    tax_receipt_date: payload?.ref?.tax_receipt_date || "",
+    invoice_no:       payload?.ref?.invoice_no       || "",
+    invoice_date:     payload?.ref?.invoice_date     || "",
+  };
+
+  const reason = {
+    text: payload?.reason?.text || payload?.reasonText || "",
+  };
+
+  return {
+    css_inline: cssInline,
+    company: normalizeCompany(payload),
+    doc: {
+      number:       payload?.doc?.number       || payload?.docNumber || "DN-DEV-0001",
       date:         payload?.doc?.date         || payload?.docDate   || "10/01/2026",
       prepared_by:  payload?.doc?.prepared_by  || "",
       project_name: payload?.doc?.project_name || "",
@@ -2472,6 +2546,14 @@ makeDocRoutes({
   filename: "tpr_credit_note.pdf",
 });
 
+// ----- Debit Note -----
+makeDocRoutes({
+  basePath: "/tpr-debit-note",
+  templateFn: templates.debit_note,
+  normalizer: normalizeDebitNotePayload,
+  filename: "tpr_debit_note.pdf",
+});
+
 // ----- Invoice / Billing -----
 makeDocRoutes({
   basePath: "/tpr-invoice",
@@ -2639,6 +2721,7 @@ app.listen(PORT, () => {
   console.log(color("POST ROUTES", ANSI.bold, ANSI.magenta));
   console.log(color("  /tpr-quotation/pdf", ANSI.white));
   console.log(color("  /tpr-credit-note/pdf", ANSI.white));
+  console.log(color("  /tpr-debit-note/pdf", ANSI.white));
   console.log(color("  /tpr-invoice/pdf", ANSI.white));
   console.log(color("  /tpr-purchase-order/pdf", ANSI.white));
   console.log(color("  /tpr-receipt/pdf", ANSI.white));

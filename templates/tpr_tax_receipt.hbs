@@ -14,13 +14,13 @@
     body {
       font-family: "TH Sarabun New", "Sarabun", "Tahoma", Arial, sans-serif;
       color: #000;
-      font-size: 14px;
+      font-size: 16px;
       line-height: 1.16;
     }
     .page { width: 100%; min-height: 270mm; position: relative; }
     .page-content { padding-bottom: 118px; }
 
-    .doc-title { text-align: left; font-size: 24px; font-weight: 800; margin: 0 0 22px; }
+    .doc-title { text-align: left; font-size: 26px; font-weight: 800; margin: 0 0 22px; }
     .header-row {
       display: grid;
       grid-template-columns: 1fr 240px;
@@ -38,7 +38,7 @@
       margin-bottom: 2px;
     }
     .logo-img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
-    .logo-text { color: #777; font-size: 12px; padding-top: 18px; }
+    .logo-text { color: #777; font-size: 14px; padding-top: 18px; }
     .company-name { font-weight: 800; }
     .company-sub { margin-top: 1px; }
 
@@ -51,13 +51,13 @@
       grid-template-columns: 62px 1fr;
       column-gap: 8px;
       min-height: 14px;
-      font-size: 14px;
+      font-size: 16px;
       padding: 0;
     }
     .meta-row .mk { font-weight: 800; white-space: nowrap; }
     .meta-row .mv { text-align: left; white-space: pre-line; }
 
-    .customer-block { margin: 12px 0 0; font-size: 14px; }
+    .customer-block { margin: 12px 0 0; font-size: 16px; }
     .cust-label, .cust-name { font-weight: 800; }
     .cust-line { margin-top: 1px; }
 
@@ -69,7 +69,7 @@
       border-right: 1px solid #000;
       padding: 3px 6px;
       vertical-align: top;
-      font-size: 14px;
+      font-size: 16px;
     }
     .qtable thead th {
       border-top: 1px solid #000;
@@ -83,12 +83,21 @@
     .qtable tbody tr.last-summary td { padding-bottom: 7px; }
     .qtable tbody tr.wht-divider td { border-top: 1px solid #000 !important; padding-top: 6px; }
 
+    /* เส้นขอบขวาสุดของตารางบางมากตอนพิมพ์จริง (พิสูจน์แล้วว่าไม่เกี่ยวกับขอบกระดาษ) — เพิ่มความหนา
+       เฉพาะเส้นขอบขวาสุด ไม่แตะเส้นด้านอื่น/เส้นคั่นคอลัมน์ระหว่างกลาง; ต้องมี selector ที่จำเพาะกว่า
+       กฎ .item-row td { border: 1px } ด้านบนด้วย ไม่งั้นแถวรายการจะโดนทับกลับเป็น 1px */
+    .qtable th:last-child,
+    .qtable td:last-child,
+    .qtable tbody tr.item-row td:last-child {
+      border-right: 2px solid #000;
+    }
+
     .col-no { width: 40px; }
     .col-desc { width: auto; }
-    .col-qty { width: 58px; }
-    .col-price { width: 82px; }
-    .col-discount { width: 58px; }
-    .col-amount { width: 86px; }
+    .col-qty { width: 64px; }
+    .col-price { width: 92px; }
+    .col-discount { width: 64px; }
+    .col-amount { width: 98px; }
 
     .center { text-align: center; }
     .right { text-align: right; }
@@ -102,12 +111,12 @@
     .no-border-left { border-left: 0 !important; }
     .no-border { border: 0 !important; }
 
-    .footer-note { margin-top: 10px; font-size: 14px; }
+    .footer-note { margin-top: 10px; font-size: 16px; }
     .note-title { font-weight: 800; }
     .note-text { white-space: pre-line; margin-top: 2px; }
 
     /* ===== Payment confirmation (เฉพาะใบกำกับภาษี/ใบเสร็จรับเงิน) ===== */
-    .pay-block { margin-top: 12px; font-size: 14px; text-align: center; }
+    .pay-block { margin-top: 12px; font-size: 16px; text-align: center; }
     .pay-row { display: flex; justify-content: center; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
     .pay-line {
       border-bottom: 1px dotted #333;

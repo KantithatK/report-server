@@ -22,7 +22,7 @@
     body {
       margin: 0;
       font-family: "TH Sarabun New", "Sarabun", "Tahoma", "Arial", sans-serif;
-      line-height: 1.25;
+      line-height: 1.15;
       color: #000;
       background: #f5f5f5;
       padding: 10mm;
@@ -69,15 +69,18 @@
     }
 
     .outer {
-      border: 1px solid #000;
-      padding: 2mm;
+      border-top: 1px solid #000;
+      border-left: 1px solid #000;
+      border-bottom: 1px solid #000;
+      border-right: 2px solid #000;
+      padding: 1mm 2mm;
     }
 
     .box {
       border: 1px solid #000;
       border-radius: 1mm;
-      padding: 2mm;
-      font-size: 10pt;
+      padding: 1mm 2mm;
+      font-size: 10.75pt;
     }
 
     .field {
@@ -98,6 +101,11 @@
 
     .field.n {
       min-width: 18mm;
+    }
+
+    .field.n-sm {
+      min-width: 12mm;
+      padding: 0 0.5mm;
     }
 
     .boxed-num {
@@ -181,7 +189,7 @@
 
     .sig-area {
       border: 1px solid #000;
-      padding: 3mm 3mm 4mm;
+      padding: 1mm 3mm 1.5mm;
       display: flex;
       gap: 6mm;
       align-items: stretch;
@@ -213,11 +221,11 @@
 
     .title {
       font-weight: 700;
-      font-size: 14pt;
+      font-size: 14.75pt;
     }
 
     .subtitle {
-      font-size: 12pt;
+      font-size: 12.75pt;
     }
 
     .avoid-break {
@@ -241,7 +249,7 @@
       width: 40mm;
       border: 1px solid #000;
       border-radius: 1mm;
-      padding: 2mm;
+      padding: 1mm 2mm;
       line-height: 1.2;
     }
 
@@ -298,7 +306,7 @@
 </head>
 
 <body>
-  <div class="page" style="font-size: 8pt;">
+  <div class="page" style="font-size: 8.75pt;">
 
     <div>
       <div>ฉบับที่ 1 (สำหรับผู้ถูกหักภาษี ณ ที่จ่าย ใช้แนบพร้อมกับแบบแสดงรายการภาษี)</div>
@@ -352,12 +360,12 @@
           </div>
         </div>
 
-        <div class="tiny" style="font-size: 8pt;">(ให้ระบุว่าเป็นบุคคล นิติบุคคล บริษัท สมาคม หรือคณะบุคคล)</div>
+        <div class="tiny" style="font-size: 8.75pt;">(ให้ระบุว่าเป็นบุคคล นิติบุคคล บริษัท สมาคม หรือคณะบุคคล)</div>
 
         <div class="row nowrap-row" style="align-items:center; justify-content:space-between;">
           <div><b>ที่อยู่</b> <span class="field xw">{{safeText withholder.address ""}}</span></div>
         </div>
-        <div class="tiny" style="font-size: 8pt;">(ให้ระบุชื่ออาคาร/หมู่บ้าน ห้องเลขที่ ชั้นที่ เลขที่ ตรอก/ซอย หมู่ที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด)</div>
+        <div class="tiny" style="font-size: 8.75pt;">(ให้ระบุชื่ออาคาร/หมู่บ้าน ห้องเลขที่ ชั้นที่ เลขที่ ตรอก/ซอย หมู่ที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด)</div>
       </div>
 
       <!-- ผู้ถูกหัก -->
@@ -392,12 +400,12 @@
           </div>
         </div>
 
-        <div class="tiny" style="font-size: 8pt;">(ให้ระบุว่าเป็นบุคคล นิติบุคคล บริษัท สมาคม หรือคณะนิติบุคคล)</div>
+        <div class="tiny" style="font-size: 8.75pt;">(ให้ระบุว่าเป็นบุคคล นิติบุคคล บริษัท สมาคม หรือคณะนิติบุคคล)</div>
 
         <div class="row nowrap-row" style="align-items:center; justify-content:space-between;">
           <div><b>ที่อยู่</b> <span class="field xw">{{safeText payee.address ""}}</span></div>
         </div>
-        <div class="tiny" style="font-size: 8pt;">(ให้ระบุชื่ออาคาร/หมู่บ้าน ห้องเลขที่ ชั้นที่ เลขที่ ตรอก/ซอย หมู่ที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด)</div>
+        <div class="tiny" style="font-size: 8.75pt;">(ให้ระบุชื่ออาคาร/หมู่บ้าน ห้องเลขที่ ชั้นที่ เลขที่ ตรอก/ซอย หมู่ที่ ถนน ตำบล/แขวง อำเภอ/เขต จังหวัด)</div>
 
         <div class="row mt1" style="align-items:flex-start;">
           <div class="col" style="max-width:55mm;">
@@ -414,7 +422,7 @@
 
         <div class="row" style="align-items:flex-start;">
           <div class="col" style="max-width:55mm;">
-            <div class="tiny" style="font-size: 8pt;">(ให้สามารถอ้างอิงหรือสอบยันกันได้ระหว่างลำดับที่ตามหนังสือรับรองฯ กับแบบยื่นรายการภาษีหักที่จ่าย)</div>
+            <div class="tiny" style="font-size: 8.75pt;">(ให้สามารถอ้างอิงหรือสอบยันกันได้ระหว่างลำดับที่ตามหนังสือรับรองฯ กับแบบยื่นรายการภาษีหักที่จ่าย)</div>
           </div>
 
           <div class="col">
@@ -428,7 +436,7 @@
 
       <!-- ตารางเงินได้ -->
       <div class="mt1 avoid-break">
-        <table class="wht-table" style="font-size: 10pt;">
+        <table class="wht-table" style="font-size: 10.75pt;">
           <colgroup>
             <col style="width:58%;">
             <col style="width:14%;">
@@ -469,14 +477,14 @@
         </table>
       </div>
 
-      <div class="box mt1 small avoid-break" style="font-size: 10pt;">
+      <div class="box mt1 small avoid-break" style="font-size: 10.75pt;">
         <b>เงินที่จ่ายเข้า</b>
-        กบข./กสจ./กองทุนสงเคราะห์ครูโรงเรียนเอกชน <span class="field n">{{safeText contrib.teacher_fund_amount ""}}</span> บาท
-        &nbsp;&nbsp; กองทุนประกันสังคม <span class="field n">{{safeText contrib.social_security_amount ""}}</span> บาท
-        &nbsp;&nbsp; กองทุนสำรองเลี้ยงชีพ <span class="field n">{{safeText contrib.provident_fund_amount ""}}</span> บาท
+        กบข./กสจ./กองทุนสงเคราะห์ครูโรงเรียนเอกชน <span class="field n-sm">{{safeText contrib.teacher_fund_amount ""}}</span> บาท
+        &nbsp; กองทุนประกันสังคม <span class="field n-sm">{{safeText contrib.social_security_amount ""}}</span> บาท
+        &nbsp; กองทุนสำรองเลี้ยงชีพ <span class="field n-sm">{{safeText contrib.provident_fund_amount ""}}</span> บาท
       </div>
 
-      <div class="box mt1 avoid-break" style="font-size: 10pt;">
+      <div class="box mt1 avoid-break" style="font-size: 10.75pt;">
         <b>ผู้จ่ายเงิน</b>
         <span class="cb {{#if payment.withholding}}checked{{else}}unchecked{{/if}}"></span> (1) หักภาษี ณ ที่จ่าย
         <span class="cb {{#if payment.forever}}checked{{else}}unchecked{{/if}}"></span> (2) ออกภาษีให้ตลอดไป
@@ -484,7 +492,7 @@
         <span class="cb {{#if payment.other}}checked{{else}}unchecked{{/if}}"></span> (4) อื่น ๆ (ระบุ) <span class="field">{{safeText payment.other_text ""}}</span>
       </div>
 
-      <div class="mt1 footer-row avoid-break" style="font-size: 10pt;">
+      <div class="mt1 footer-row avoid-break" style="font-size: 10.75pt;">
         <div class="warn-box">
           <b>คำเตือน</b> ผู้มีหน้าที่ออกหนังสือรับรองการหักภาษี ณ ที่จ่าย
           ฝ่าฝืนไม่ปฏิบัติตามมาตรา 50 ทวิ แห่งประมวลรัษฎากร
