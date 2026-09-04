@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/fonts/th-sarabun-new.css">
+
+
+  <title>Purchase Requisition {{doc.number}}</title>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { padding: 0; margin: 0; }
+    body {
+      font-family: "TH Sarabun New", "Sarabun", "Tahoma", Arial, sans-serif;
+      color: #000;
+      font-size: 16px;
+      line-height: 1.16;
+    }
+    .page { width: 100%; min-height: 270mm; position: relative; }
+    .page-content { padding-bottom: 150px; }
+
+    .doc-title { text-align: left; font-size: 26px; font-weight: 800; margin: 0 0 12px; }
+    .header-row {
+      display: grid;
+      grid-template-columns: 1fr 240px;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 4px;
+    }
+    .logo-box {
+      width: 72px;
+      height: 58px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      margin-bottom: 2px;
+    }
+    .logo-img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+    .logo-text { color: #777; font-size: 14px; padding-top: 18px; }
+    .company-name { font-weight: 800; }
+    .company-sub { margin-top: 1px; }
+
+    .company-col { align-self: start; }
+    .doc-col { align-items: stretch; align-self: start; }
+    .meta-list { width: 240px; }
+    .meta-list + .meta-list { margin-top: 6px; }
+    .meta-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      column-gap: 8px;
+      min-height: 14px;
+      font-size: 16px;
+      padding: 0;
+    }
+    .meta-row .mk { font-weight: 800; white-space: nowrap; }
+    .meta-row .mv { text-align: left; white-space: pre-line; }
+
+    .category-title { text-align: center; font-weight: 800; font-size: 16px; margin: 6px 0 6px; }
+    .category-table { margin: 0 auto 14px; font-size: 16px; width: auto; }
+    .category-table td { padding: 0 14px 0 0; white-space: nowrap; }
+    .checkbox { display: inline-block; width: 13px; height: 13px; border: 1px solid #000; text-align: center; line-height: 12px; font-size: 12px; font-weight: 800; margin-right: 4px; }
+
+    table { border-collapse: collapse; width: 100%; }
+    .qtable { table-layout: fixed; border: 1px solid #000; margin-top: 4px; }
+    .qtable th,
+    .qtable td {
+      border-left: 1px solid #000;
+      border-right: 1px solid #000;
+      padding: 3px 6px;
+      vertical-align: top;
+      font-size: 16px;
+    }
+    .qtable thead th {
+      border-top: 1px solid #000;
+      border-bottom: 1px solid #000;
+      text-align: center;
+      font-weight: 800;
+      line-height: 1.08;
+    }
+    .qtable tbody tr.item-row td { border: 1px solid #000; height: 18px; }
+    .qtable tbody tr.summary-start td { padding-top: 8px; }
+    .qtable tbody tr.last-summary td { padding-bottom: 7px; }
+
+    .qtable th:last-child,
+    .qtable td:last-child,
+    .qtable tbody tr.item-row td:last-child {
+      border-right: 2px solid #000;
+    }
+
+    .col-no { width: 34px; }
+    .col-code { width: 78px; }
+    .col-desc { width: auto; }
+    .col-qty { width: 56px; }
+    .col-price { width: 92px; }
+    .col-needed { width: 84px; }
+    .col-amount { width: 98px; }
+
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .desc-strong { font-weight: 400; }
+    .desc-muted { white-space: pre-line; }
+    .qty-cell { white-space: nowrap; }
+    .summary-label { text-align: right; font-weight: 400; white-space: nowrap; }
+    .summary-value { text-align: right; white-space: nowrap; }
+    .amount-words-cell { font-weight: 800; vertical-align: top; }
+    .no-border-right { border-right: 0 !important; }
+    .no-border-left { border-left: 0 !important; }
+
+    .footer-note { margin-top: 10px; font-size: 16px; }
+    .note-title { font-weight: 800; }
+    .note-text { white-space: pre-line; margin-top: 2px; }
+
+    .sign-row {
+      position: fixed;
+      bottom: 14mm;
+      left: 0;
+      right: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      padding: 0;
+      align-items: end;
+    }
+    .sign-col { position: relative; text-align: center; padding: 0; }
+    .sign-line { border-top: 1px solid #999; height: 1px; margin-bottom: 5px; }
+    .sign-label { font-weight: 800; }
+    .sign-date-row { margin-top: 8px; font-size: 15px; }
+    /* พื้นที่ว่างในวงเล็บให้กว้างพอสำหรับเขียนชื่อด้วยลายมือ */
+    .sign-name-fill { display: inline-block; min-width: 150px; border-bottom: 1px dotted #999; }
+    .sign-date-line { margin-top: 6px; font-size: 15px; }
+    .sign-date-fill { display: inline-block; min-width: 90px; border-bottom: 1px dotted #999; }
+    /* position: absolute ตัดออกจาก flow — ไม่ดันความสูงของ .sign-col จึงไม่กระทบ align-items:end ของ .sign-row */
+    .sign-image {
+      position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+      margin-bottom: 4px; max-height: 42px; max-width: 130px; object-fit: contain;
+    }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+  <div class="page-content">
+    <!-- Header: บริษัท (ซ้าย) + เมตาเอกสาร (ขวา) -->
+    <div class="header-row">
+      <div class="company-col">
+        <div class="logo-box">
+          {{#if company.logo_url}}
+          <img class="logo-img" src="{{company.logo_url}}" alt="logo" />
+          {{else}}
+          <div class="logo-text">โลโก้</div>
+          {{/if}}
+        </div>
+        <div class="company-name">{{company.name}}</div>
+        <div class="company-sub">{{#if company.branch}}{{company.branch}} {{/if}}{{company.address_line1}}</div>
+        {{#if company.address_line2}}<div class="company-sub">{{company.address_line2}}</div>{{/if}}
+        <div class="company-sub">เลขประจำตัวผู้เสียภาษี {{company.tax_id}}</div>
+      </div>
+
+      <div class="doc-col">
+        <div class="doc-title">ใบขอซื้อ</div>
+
+        <div class="meta-list">
+          <div class="meta-row"><span class="mk">เลขที่</span><span class="mv">{{doc.number}}</span></div>
+          <div class="meta-row"><span class="mk">วันที่ขอซื้อ</span><span class="mv">{{doc.date}}</span></div>
+          <div class="meta-row"><span class="mk">แผนก</span><span class="mv">{{doc.department}}</span></div>
+          <div class="meta-row"><span class="mk">ผู้ขอซื้อ</span><span class="mv">{{doc.requester_name}}</span></div>
+        </div>
+        {{#if doc.project_name}}
+        <div class="meta-list">
+          <div class="meta-row"><span class="mk">โครงการ</span><span class="mv">{{doc.project_name}}</span></div>
+        </div>
+        {{/if}}
+        {{#if doc.purpose}}
+        <div class="meta-list">
+          <div class="meta-row"><span class="mk">เหตุผลที่ต้องซื้อ</span><span class="mv">{{doc.purpose}}</span></div>
+        </div>
+        {{/if}}
+      </div>
+    </div>
+
+    <!-- ประเภทของที่ขอซื้อ -->
+    <div class="category-title">ประเภทของที่ขอซื้อ</div>
+    <table class="category-table">
+      <tr>
+        <td><span class="checkbox">{{#if category.raw_material}}✓{{/if}}</span>วัตถุดิบ</td>
+        <td><span class="checkbox">{{#if category.consumable}}✓{{/if}}</span>วัสดุสิ้นเปลือง</td>
+        <td><span class="checkbox">{{#if category.asset}}✓{{/if}}</span>สินทรัพย์</td>
+        <td><span class="checkbox">{{#if category.goods}}✓{{/if}}</span>สินค้า</td>
+        <td><span class="checkbox">{{#if category.other}}✓{{/if}}</span>อื่นๆ{{#if category.other_detail}} ({{category.other_detail}}){{/if}}</td>
+      </tr>
+    </table>
+
+    <!-- Items Table -->
+    <table class="qtable">
+      <colgroup>
+        <col class="col-no" />
+        <col class="col-code" />
+        <col class="col-desc" />
+        <col class="col-qty" />
+        <col class="col-price" />
+        <col class="col-needed" />
+        <col class="col-amount" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="col-no">ลำดับ</th>
+          <th class="col-code">รหัสสินค้า</th>
+          <th class="col-desc">ชื่อสินค้า</th>
+          <th class="col-qty">จำนวน</th>
+          <th class="col-price">ราคา/หน่วย</th>
+          <th class="col-needed">วันที่ต้องการ</th>
+          <th class="col-amount">มูลค่า</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+        <tr class="item-row">
+          <td class="center">{{no}}</td>
+          <td class="center">{{item_code}}</td>
+          <td>
+            <div class="desc-strong">{{name}}</div>
+            {{#if description}}<div class="desc-muted">{{description}}</div>{{/if}}
+          </td>
+          <td class="center">
+            <span class="qty-cell">{{qty}} {{unit}}</span>
+          </td>
+          <td class="right">{{money price}}</td>
+          <td class="center">{{needed_by_date}}</td>
+          <td class="right">{{money line_total}}</td>
+        </tr>
+        {{/each}}
+
+        <tr class="summary-start last-summary">
+          <td colspan="5" class="amount-words-cell no-border-right">
+            ({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}})
+          </td>
+          <td class="summary-label no-border-left">รวม</td>
+          <td class="summary-value">{{money summary.total}} บาท</td>
+        </tr>
+      </tbody>
+    </table>
+
+    {{#if note.text}}
+    <div class="footer-note">
+      <div class="note-title">{{#if note.title}}{{note.title}}{{else}}หมายเหตุ{{/if}}</div>
+      <div class="note-text">{{note.text}}</div>
+    </div>
+    {{/if}}
+
+  </div><!-- /page-content -->
+
+    <!-- Signatures: ผู้จัดทำ / ผู้ตรวจสอบ / ผู้อนุมัติ -->
+    <div class="sign-row">
+      <div class="sign-col">
+        <div class="sign-line"></div>
+        <div class="sign-label">ผู้จัดทำ</div>
+        <div class="sign-date-row">(<span class="sign-name-fill">&nbsp;</span>)</div>
+        <div class="sign-date-line">วันที่ <span class="sign-date-fill">&nbsp;</span></div>
+      </div>
+      <div class="sign-col">
+        <div class="sign-line"></div>
+        <div class="sign-label">ผู้ตรวจสอบ</div>
+        <div class="sign-date-row">(<span class="sign-name-fill">{{#if doc.reviewer_name}}{{doc.reviewer_name}}{{else}}&nbsp;{{/if}}</span>)</div>
+        <div class="sign-date-line">วันที่ <span class="sign-date-fill">&nbsp;</span></div>
+      </div>
+      <div class="sign-col">
+        {{#if doc.signature_image_url}}
+        <img class="sign-image" src="{{doc.signature_image_url}}" alt="ลายเซ็น" />
+        {{/if}}
+        <div class="sign-line"></div>
+        <div class="sign-label">ผู้อนุมัติ</div>
+        <div class="sign-date-row">(<span class="sign-name-fill">{{#if doc.approver_name}}{{doc.approver_name}}{{else}}&nbsp;{{/if}}</span>)</div>
+        <div class="sign-date-line">วันที่ <span class="sign-date-fill">&nbsp;</span></div>
+      </div>
+    </div>
+
+  </div><!-- /page -->
+</body>
+
+</html>

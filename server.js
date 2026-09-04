@@ -188,6 +188,7 @@ function routeLabelFromPath(url = "") {
   if (url.startsWith("/tpr-debit-note")) return "DEBIT_NOTE";
   if (url.startsWith("/tpr-invoice")) return "INVOICE";
   if (url.startsWith("/tpr-purchase-order")) return "PURCHASE_ORDER";
+  if (url.startsWith("/tpr-purchase-requisition")) return "PURCHASE_REQUISITION";
   if (url.startsWith("/tpr-goods-receipt")) return "GOODS_RECEIPT";
   if (url.startsWith("/tpr-expense-bill")) return "EXPENSE_BILL";
   if (url.startsWith("/tpr-receipt")) return "RECEIPT";
@@ -514,6 +515,7 @@ const templates = {
   debit_note: compileTemplate(path.join("templates", "tpr_debit_note.hbs")),
   invoice: compileTemplate(path.join("templates", "tpr_invoice.hbs")),
   purchase_order: compileTemplate(path.join("templates", "tpr_purchase_order.hbs")),
+  purchase_requisition: compileTemplate(path.join("templates", "tpr_purchase_requisition.hbs")),
   goods_receipt: compileTemplate(path.join("templates", "tpr_goods_receipt.hbs")),
   expense_bill: compileTemplate(path.join("templates", "tpr_expense_bill.hbs")),
   receipt: compileTemplate(path.join("templates", "tpr_receipt.hbs")),
@@ -1317,6 +1319,70 @@ function normalizePurchaseOrderPayload(payload) {
         payload?.confirmation?.sign2Label ||
         "ประทับตราหน่วยงาน",
       footnote: payload?.confirmation?.footnote || payload?.confirmationFootnote || "",
+    },
+  };
+}
+
+// Purchase Requisition (ใบขอซื้อ) — เอกสารภายใน ไม่มี VAT/ส่วนลด/หัก ณ ที่จ่าย ตามแบบฟอร์มกระดาษจริง
+// (ต่างจากใบสั่งซื้อที่มีคู่ค้าภายนอก) — item มี item_code/needed_by_date ต่อรายการแทน discount/tax
+function normalizePurchaseRequisitionPayload(payload) {
+  const rawItems = Array.isArray(payload?.items) ? payload.items : [];
+  const items = rawItems.map((it, idx) => {
+    const qty = parseNumberLoose(it?.qty);
+    const price = parseNumberLoose(it?.price ?? it?.unit_price ?? it?.estimated_unit_price);
+    const lineTotal = it?.line_total != null ? parseNumberLoose(it.line_total) : round2(qty * price);
+    return {
+      no: idx + 1,
+      item_code: it?.item_code || "",
+      name: it?.name || it?.item_name || "-",
+      description: it?.description || "",
+      qty,
+      unit: it?.unit || "",
+      price: round2(price),
+      needed_by_date: it?.needed_by_date || "",
+      line_total: round2(lineTotal),
+    };
+  });
+
+  const computedTotal = round2(items.reduce((s, it) => s + Number(it.line_total || 0), 0));
+  const total = round2(parseNumberLoose(payload?.summary?.total) || computedTotal);
+  const totalTextFromClient =
+    typeof payload?.summary?.total_text === "string" && payload.summary.total_text.trim()
+      ? payload.summary.total_text.trim()
+      : "";
+  const total_text = totalTextFromClient || thaiBahtText(total);
+
+  const categoryKey = payload?.category?.key || payload?.doc?.category || "";
+  const category = {
+    raw_material: categoryKey === "raw_material",
+    consumable: categoryKey === "consumable",
+    asset: categoryKey === "asset",
+    goods: categoryKey === "goods",
+    other: categoryKey === "other",
+    other_detail: payload?.category?.detail || payload?.doc?.category_detail || "",
+  };
+
+  return {
+    css_inline: cssInline,
+    company: normalizeCompany(payload),
+    doc: {
+      number: payload?.doc?.number || "PR-DEV-0001",
+      date: payload?.doc?.date || "",
+      department: payload?.doc?.department || "",
+      requester_name: payload?.doc?.requester_name || "",
+      project_name: payload?.doc?.project_name || "",
+      purpose: payload?.doc?.purpose || "",
+      preparer_name: payload?.doc?.preparer_name || "",
+      reviewer_name: payload?.doc?.reviewer_name || "",
+      approver_name: payload?.doc?.approver_name || "",
+      signature_image_url: payload?.doc?.signature_image_url || "",
+    },
+    category,
+    items,
+    summary: { total, total_text },
+    note: {
+      title: payload?.note?.title || "หมายเหตุ",
+      text: payload?.note?.text || payload?.note_text || "",
     },
   };
 }
@@ -2570,6 +2636,14 @@ makeDocRoutes({
   filename: "tpr_purchase_order.pdf",
 });
 
+// ----- Purchase Requisition -----
+makeDocRoutes({
+  basePath: "/tpr-purchase-requisition",
+  templateFn: templates.purchase_requisition,
+  normalizer: normalizePurchaseRequisitionPayload,
+  filename: "tpr_purchase_requisition.pdf",
+});
+
 // ----- Goods Receipt -----
 makeDocRoutes({
   basePath: "/tpr-goods-receipt",
@@ -2724,6 +2798,7 @@ app.listen(PORT, () => {
   console.log(color("  /tpr-debit-note/pdf", ANSI.white));
   console.log(color("  /tpr-invoice/pdf", ANSI.white));
   console.log(color("  /tpr-purchase-order/pdf", ANSI.white));
+  console.log(color("  /tpr-purchase-requisition/pdf", ANSI.white));
   console.log(color("  /tpr-receipt/pdf", ANSI.white));
   console.log(color("  /tpr-tax-receipt/pdf", ANSI.white));
   console.log(color("  /tpr-withholding-tax-certificate/pdf", ANSI.white));
