@@ -159,6 +159,9 @@
         <div class="company-sub">{{#if company.branch}}{{company.branch}} {{/if}}{{company.address_line1}}</div>
         {{#if company.address_line2}}<div class="company-sub">{{company.address_line2}}</div>{{/if}}
         <div class="company-sub">เลขประจำตัวผู้เสียภาษี {{company.tax_id}}</div>
+        {{#if company.phone}}<div class="company-sub">โทรศัพท์ {{company.phone}}{{#if company.mobile}} เบอร์มือถือ {{company.mobile}}{{/if}}</div>{{else}}{{#if company.mobile}}<div class="company-sub">เบอร์มือถือ {{company.mobile}}</div>{{/if}}{{/if}}
+        {{#if company.email}}<div class="company-sub">Email : {{company.email}}</div>{{/if}}
+        {{#if company.website}}<div class="company-sub">{{company.website}}</div>{{/if}}
       </div>
 
       <div class="doc-col">

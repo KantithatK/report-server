@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="th">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/fonts/th-sarabun-new.css">
+
+  <title>{{doc.title_en}} {{doc.number}}</title>
+
+  <style>
+    * { box-sizing: border-box; }
+    html, body { padding: 0; margin: 0; }
+    body {
+      font-family: "TH Sarabun New", "Sarabun", "Tahoma", Arial, sans-serif;
+      color: #111;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    /* สีตามธีมระบบ (theme.js: primary.main = กรมท่า #2f4858, primary.light = #4a5b68) */
+    :root {
+      --accent: #2f4858;
+      --line: #4a5b68;
+    }
+
+    /* หน้ากระดาษ A4 (margin 12mm จาก Puppeteer) — สูงเต็มหน้าเพื่อให้ตารางยืดถึงยอดรวมเหมือนตัวอย่าง FlowAccount */
+    .page {
+      width: 100%;
+      min-height: 272mm;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== หัวเอกสาร ===== */
+    .doc-title { color: var(--accent); font-size: 26px; font-weight: 700; line-height: 1.05; }
+    .doc-subtitle { color: var(--accent); font-size: 16px; margin-bottom: 8px; }
+
+    .head { display: grid; grid-template-columns: 1fr 240px; gap: 16px; margin-bottom: 6px; }
+    .company-name { font-weight: 800; font-size: 15px; }
+    .company-line { font-size: 13.5px; margin-top: 1px; }
+
+    .meta { display: grid; grid-template-columns: 105px 1fr; row-gap: 3px; font-size: 13.5px; align-content: start; }
+    .meta .k { color: var(--accent); }
+    .meta .v { text-align: left; }
+
+    .contact { margin: 8px 0 12px; font-size: 13.5px; }
+    .contact .k { color: var(--accent); }
+
+    .desc { font-size: 13.5px; margin-bottom: 4px; }
+
+    /* ===== ตาราง (ใช้ grid เพื่อให้เส้นแนวตั้งยืดสุดพื้นที่ที่เหลือ) ===== */
+    .cols { display: grid; grid-template-columns: 26mm 1fr 34mm 34mm; }
+
+    .t-head { background: var(--accent); color: #fff; }
+    .t-head .th { padding: 3px 8px; font-size: 13px; line-height: 1.15; }
+    .t-head .th b { display: block; font-weight: 400; }
+    .t-head .th.num { text-align: right; }
+
+    .t-body { flex: 1; position: relative; border-left: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); min-height: 130mm; }
+    .t-rules { position: absolute; inset: 0; pointer-events: none; }
+    .t-rules > div { border-right: 1px solid var(--line); }
+    .t-rules > div:last-child { border-right: 0; }
+
+    .t-rows { position: relative; }
+    .t-rows .row { break-inside: avoid; }
+    .t-rows .td { padding: 3px 8px; font-size: 13.5px; }
+    .t-rows .td.num { text-align: right; white-space: nowrap; }
+
+    /* ===== ยอดรวม ===== */
+    .grand { display: grid; grid-template-columns: 1fr 34mm 34mm; border: 1px solid var(--line); border-top: 0; font-size: 13.5px; }
+    .grand > div { padding: 4px 8px; }
+    .grand .label { text-align: right; border-right: 1px solid var(--line); }
+    .grand .num { text-align: right; border-left: 1px solid var(--line); }
+    .grand-wrap { margin-top: 0; }
+
+    .remark { border: 1px solid var(--line); border-top: 0; padding: 4px 8px; font-size: 13.5px; min-height: 30px; }
+    .remark .k { }
+
+    /* ===== ลายเซ็น 3 ช่อง ===== */
+    .sign { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-top: 0; break-inside: avoid; }
+    .sign > div { padding: 4px 8px 8px; height: 30mm; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--line); }
+    .sign > div:last-child { border-right: 0; }
+    .sign .who { text-align: center; font-size: 13px; }
+    .sign .line { font-size: 13px; }
+    .sign .line .u { display: inline-block; border-bottom: 1px solid #111; width: 78%; height: 14px; vertical-align: bottom; margin: 0 2px; }
+    .sign .line .c { display: inline-block; }
+    .sign .date { font-size: 12.5px; margin-top: 4px; }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="doc-title">{{doc.title}}</div>
+    <div class="doc-subtitle">{{doc.title_en}}</div>
+
+    <div class="head">
+      <div>
+        <div class="company-name">{{company.name}}</div>
+        {{#if company.address_line1}}
+        <div class="company-line">{{#if company.branch}}{{company.branch}} {{/if}}{{company.address_line1}}</div>
+        {{#if company.address_line2}}<div class="company-line">{{company.address_line2}}</div>{{/if}}
+        {{else}}
+        {{#if company.address}}<div class="company-line">{{company.address}}</div>{{/if}}
+        {{/if}}
+        <div class="company-line">เลขประจำตัวผู้เสียภาษี {{safeText company.tax_id "-"}}</div>
+        {{#if company.phone}}<div class="company-line">โทรศัพท์ {{company.phone}}{{#if company.mobile}} เบอร์มือถือ {{company.mobile}}{{/if}}</div>{{else}}{{#if company.mobile}}<div class="company-line">เบอร์มือถือ {{company.mobile}}</div>{{/if}}{{/if}}
+        {{#if company.email}}<div class="company-line">Email : {{company.email}}</div>{{/if}}
+        {{#if company.website}}<div class="company-line">{{company.website}}</div>{{/if}}
+      </div>
+      <div class="meta">
+        <div class="k">เลขที่/Voucher:</div><div class="v">{{doc.number}}</div>
+        <div class="k">วันที่/Date:</div><div class="v">{{doc.date}}</div>
+        <div class="k">อ้างอิง/Reference:</div><div class="v">{{doc.reference}}</div>
+        <div class="k">ผู้จัดทำ/Preparer:</div><div class="v">{{doc.prepared_by}}</div>
+      </div>
+    </div>
+
+    <div class="contact">
+      <div class="k">ผู้ติดต่อ/Contact:</div>
+      <div>{{contact.name}}</div>
+      {{#if contact.address}}<div>{{contact.address}}</div>{{/if}}
+      <div>เลขประจำตัวผู้เสียภาษี/Tax ID: {{safeText contact.tax_id "-"}}</div>
+    </div>
+
+    <div class="desc">ค่าอธิบาย/Description: {{doc.description}}</div>
+
+    <div class="cols t-head">
+      <div class="th">รหัสบัญชี<b>Code</b></div>
+      <div class="th">ชื่อบัญชี<b>Account name</b></div>
+      <div class="th num">เดบิต<b>Debit</b></div>
+      <div class="th num">เครดิต<b>Credit</b></div>
+    </div>
+
+    <div class="t-body">
+      <div class="t-rules cols"><div></div><div></div><div></div><div></div></div>
+      <div class="t-rows">
+        {{#each lines}}
+        <div class="cols row">
+          <div class="td">{{this.code}}</div>
+          <div class="td">{{this.name}}</div>
+          <div class="td num">{{#if this.debit}}{{money this.debit}}{{/if}}</div>
+          <div class="td num">{{#if this.credit}}{{money this.credit}}{{/if}}</div>
+        </div>
+        {{/each}}
+      </div>
+    </div>
+
+    <div class="grand-wrap">
+      <div class="grand">
+        <div class="label">รวมทั้งสิ้น/Grand total</div>
+        <div class="num">{{money summary.total_debit}}</div>
+        <div class="num">{{money summary.total_credit}}</div>
+      </div>
+      <div class="remark"><span class="k">หมายเหตุ/Remark:</span> {{doc.remark}}</div>
+      <div class="sign">
+        <div>
+          <div class="who">ผู้จัดทำ/Prepared by</div>
+          <div>
+            <div class="line">(<span class="u"></span>)</div>
+            <div class="date">วันที่/Date:</div>
+          </div>
+        </div>
+        <div>
+          <div class="who">ผู้สอบทาน/Reviewed by</div>
+          <div>
+            <div class="line">(<span class="u"></span>)</div>
+            <div class="date">วันที่/Date:</div>
+          </div>
+        </div>
+        <div>
+          <div class="who">ผู้อนุมัติ/Approved by</div>
+          <div>
+            <div class="line">(<span class="u"></span>)</div>
+            <div class="date">วันที่/Date:</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

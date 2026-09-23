@@ -201,6 +201,7 @@ function routeLabelFromPath(url = "") {
   if (url.startsWith("/tpr-petty-cash-payment-report")) return "PETTY_CASH_REPORT";
   if (url.startsWith("/tpr-receipt-certification")) return "RECEIPT_CERTIFICATION";
   if (url.startsWith("/tpr-payroll-slip")) return "PAYROLL_SLIP";
+  if (url.startsWith("/tpr-journal-voucher")) return "JOURNAL_VOUCHER";
   if (url.startsWith("/health")) return "HEALTH";
   if (url.startsWith("/debug/css")) return "DEBUG_CSS";
   return "GENERAL";
@@ -536,6 +537,7 @@ const templates = {
   payroll_slip: compileTemplate(
     path.join("templates", "tpr_payroll_slip.hbs")
   ),
+  journal_voucher: compileTemplate(path.join("templates", "tpr_journal_voucher.hbs")),
 };
 
 // ✅ load CSS to inline inject (เผื่อ template ยังใช้) — คงไว้เพื่อ backward compatible
@@ -1266,6 +1268,7 @@ function normalizePurchaseOrderPayload(payload) {
       reference_no: payload?.doc?.reference_no || payload?.reference_no || "",
       project_name: payload?.doc?.project_name || payload?.project_name || payload?.projectName || "",
       quotation_no: payload?.doc?.quotation_no || payload?.quotation_no || payload?.quotationNo || "",
+      pr_no: payload?.doc?.pr_no || payload?.pr_no || payload?.prNo || "",
       ref_docs: Array.isArray(payload?.ref_docs) ? payload.ref_docs.filter(r => r.doc_no?.trim()) : [],
       copy_label: payload?.doc?.copy_label || payload?.copy_label || payload?.copyLabel || "ต้นฉบับ",
       signature_image_url: payload?.doc?.signature_image_url || "",
@@ -1969,6 +1972,47 @@ function normalizePaymentVoucherPayload(payload) {
       total_text: thaiBahtText(net_total),
     },
     notes: payload?.notes || payload?.note || payload?.remark || "",
+  };
+}
+
+// สมุดรายวัน (Journal/Purchase Voucher) — เดบิต/เครดิตต่อบรรทัด + ยอดรวม (ใช้ template เดียวกัน แยกชื่อเอกสารด้วย doc.title)
+function normalizeJournalVoucherPayload(payload) {
+  const rawLines = Array.isArray(payload?.lines) ? payload.lines : [];
+  const lines = rawLines.map((ln) => ({
+    code: ln?.code || ln?.account_code || "",
+    name: ln?.name || ln?.account_name || "",
+    description: ln?.description || "",
+    debit: round2(parseNumberLoose(ln?.debit)),
+    credit: round2(parseNumberLoose(ln?.credit)),
+  }));
+
+  const total_debit = round2(
+    parseNumberLoose(payload?.summary?.total_debit) || lines.reduce((s, x) => s + x.debit, 0)
+  );
+  const total_credit = round2(
+    parseNumberLoose(payload?.summary?.total_credit) || lines.reduce((s, x) => s + x.credit, 0)
+  );
+
+  return {
+    css_inline: cssInline,
+    company: normalizeCompany(payload),
+    doc: {
+      title: payload?.doc?.title || "สมุดรายวันทั่วไป",
+      title_en: payload?.doc?.title_en || "Journal voucher",
+      number: payload?.doc?.number || "",
+      date: payload?.doc?.date || "",
+      reference: payload?.doc?.reference || "",
+      prepared_by: payload?.doc?.prepared_by || "",
+      description: payload?.doc?.description || "",
+      remark: payload?.doc?.remark || "",
+    },
+    contact: {
+      name: payload?.contact?.name || "",
+      address: payload?.contact?.address || "",
+      tax_id: payload?.contact?.tax_id || "",
+    },
+    lines,
+    summary: { total_debit, total_credit },
   };
 }
 
@@ -2693,6 +2737,14 @@ makeDocRoutes({
   templateFn: templates.payment_voucher,
   normalizer: normalizePaymentVoucherPayload,
   filename: "tpr_payment_voucher.pdf",
+});
+
+// ----- Journal Voucher (สมุดรายวันทั่วไป) -----
+makeDocRoutes({
+  basePath: "/tpr-journal-voucher",
+  templateFn: templates.journal_voucher,
+  normalizer: normalizeJournalVoucherPayload,
+  filename: "tpr_journal_voucher.pdf",
 });
 
 // ----- Receipt Voucher -----

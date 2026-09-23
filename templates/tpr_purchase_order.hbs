@@ -196,6 +196,9 @@
           {{#if doc.quotation_no}}
           <div class="meta-row"><span class="mk">อ้างอิง</span><span class="mv">{{doc.quotation_no}}</span></div>
           {{/if}}
+          {{#if doc.pr_no}}
+          <div class="meta-row"><span class="mk">อ้างอิง PR</span><span class="mv">{{doc.pr_no}}</span></div>
+          {{/if}}
           {{#if doc.ref_docs.length}}
           <div class="meta-row"><span class="mk">เอกสารอ้างอิง</span><span class="mv">{{#each doc.ref_docs}}{{this.doc_no}}{{#unless @last}}, {{/unless}}{{/each}}</span></div>
           {{/if}}
