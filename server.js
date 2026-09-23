@@ -1545,15 +1545,20 @@ function normalizeExpenseBillPayload(payload) {
   const total_text = totalTextFromClient || thaiBahtText(total);
 
   // mirror normalizeTaxReceiptPayload เป๊ะ — แสดงเฉพาะรายการชำระล่าสุด 1 รายการ
+  // รูปแบบเต็มตามที่ฝ่ายบัญชีขอ (เทียบ FlowAccount 2569-09-23) — checkbox ช่องทางชำระ + หัก ณ ที่จ่าย
   const paymentRaw = payload?.payment || null;
   const payment = paymentRaw ? {
-    method:      paymentRaw.method || "",
-    is_cheque:   !!paymentRaw.is_cheque,
-    date:        paymentRaw.date || "",
-    amount:      round2(paymentRaw.amount || 0),
-    bank_name:   paymentRaw.bank_name || "",
-    cheque_no:   paymentRaw.cheque_no || "",
-    cheque_date: paymentRaw.cheque_date || "",
+    method:             paymentRaw.method || "",
+    is_cash:            !!paymentRaw.is_cash,
+    is_cheque:          !!paymentRaw.is_cheque,
+    is_transfer:        !!paymentRaw.is_transfer,
+    is_credit_card:     !!paymentRaw.is_credit_card,
+    date:               paymentRaw.date || "",
+    amount:             round2(paymentRaw.amount || 0),
+    withholding_amount: round2(paymentRaw.withholding_amount || 0),
+    bank_name:          paymentRaw.bank_name || "",
+    cheque_no:          paymentRaw.cheque_no || "",
+    cheque_date:        paymentRaw.cheque_date || "",
   } : null;
 
   return {
@@ -1718,13 +1723,17 @@ function normalizeTaxReceiptPayload(payload) {
 
   const paymentRaw = payload?.payment || null;
   const payment = paymentRaw ? {
-    method:      paymentRaw.method || "",
-    is_cheque:   !!paymentRaw.is_cheque,
-    date:        paymentRaw.date || "",
-    amount:      round2(paymentRaw.amount || 0),
-    bank_name:   paymentRaw.bank_name || "",
-    cheque_no:   paymentRaw.cheque_no || "",
-    cheque_date: paymentRaw.cheque_date || "",
+    method:             paymentRaw.method || "",
+    is_cash:            !!paymentRaw.is_cash,
+    is_cheque:          !!paymentRaw.is_cheque,
+    is_transfer:        !!paymentRaw.is_transfer,
+    is_credit_card:     !!paymentRaw.is_credit_card,
+    date:               paymentRaw.date || "",
+    amount:             round2(paymentRaw.amount || 0),
+    withholding_amount: round2(paymentRaw.withholding_amount || 0),
+    bank_name:          paymentRaw.bank_name || "",
+    cheque_no:          paymentRaw.cheque_no || "",
+    cheque_date:        paymentRaw.cheque_date || "",
   } : null;
 
   return {

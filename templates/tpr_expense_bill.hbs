@@ -117,17 +117,40 @@
     .note-title { font-weight: 800; }
     .note-text { white-space: pre-line; margin-top: 2px; }
 
-    /* ===== Payment confirmation (mirror tpr_tax_receipt.hbs เป๊ะ) ===== */
-    .pay-block { margin-top: 12px; font-size: 16px; text-align: center; }
-    .pay-row { display: flex; justify-content: center; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-    .pay-line {
-      border-bottom: 1px dotted #333;
-      display: inline-block;
-      min-width: 120px;
-      transform: translateY(-2px);
+    /* ===== Payment confirmation — รูปแบบเต็มตามที่ฝ่ายบัญชีขอ (เทียบ FlowAccount 2569-09-23) ===== */
+    .pay-block { margin-top: 12px; font-size: 16px; width: 100%; }
+    .pay-title { font-weight: 800; text-align: left; margin-bottom: 6px; }
+    .pay-method-row { display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 18px; margin-bottom: 10px; }
+    .chk-item { display: inline-flex; align-items: center; gap: 5px; }
+    .chk-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 13px;
+      height: 13px;
+      border: 1.4px solid #333;
+      flex-shrink: 0;
+      box-sizing: border-box;
     }
-    .pay-line.sm { min-width: 90px; }
-    .pay-value { font-weight: 800; }
+    .chk-box.checked::after {
+      content: '\2713';
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      transform: translateY(3px);
+    }
+    /* แถวเต็มความกว้าง — แต่ละฟิลด์มีเส้นขีดใต้เสมอ (ว่างก็ยังเห็นเส้น) เหมือนต้นแบบ */
+    .pay-row { display: flex; align-items: flex-end; width: 100%; gap: 14px; margin-top: 10px; }
+    .pay-field { display: flex; align-items: flex-end; flex: 1; gap: 4px; white-space: nowrap; }
+    .pay-field .pay-label { flex-shrink: 0; }
+    .pay-value {
+      flex: 1;
+      border-bottom: 1px dotted #333;
+      min-height: 15px;
+      padding: 0 4px 1px;
+      font-weight: 800;
+      text-align: center;
+    }
 
     .bottom-fixed {
       position: fixed;
@@ -135,19 +158,21 @@
       left: 0;
       right: 0;
     }
+    /* ===== Signature block — เต็มความกว้าง 3 คอลัมน์เท่าฝั่งต้นแบบ (เทียบ FlowAccount 2569-09-23) ===== */
     .sign-row {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 24px;
       padding: 0;
-      align-items: end;
       margin-top: 22px;
     }
-    .sign-col { text-align: center; padding: 0; }
-    .sign-line { border-top: 1px solid #999; height: 1px; width: 120px; margin: 0 auto 5px; }
-    .sign-name { min-height: 16px; margin-bottom: 4px; }
-    .sign-label { font-weight: 800; }
-    .sign-date-row { margin-top: 22px; }
+    .sign-col { text-align: center; width: 100%; }
+    .sign-label { font-weight: 800; margin-bottom: 4px; }
+    .sign-name { min-height: 16px; }
+    .sign-line { border-top: 1px solid #333; width: 100%; margin: 26px 0 8px; }
+    .sign-name-row { display: flex; align-items: baseline; gap: 2px; margin-bottom: 6px; }
+    .sign-name-line { flex: 1; border-bottom: 1px dotted #333; min-height: 13px; }
+    .sign-date-row { margin-top: 4px; text-align: left; }
     .sign-date-label { font-weight: 800; font-size: 14px; }
     .sign-date-line { border-bottom: 1px dotted #666; display: inline-block; width: 120px; margin-left: 4px; }
 
@@ -330,45 +355,44 @@
     <!-- การชำระเงิน + Signatures: fixed ติดกันด้านล่างสุดของหน้า (mirror tpr_tax_receipt.hbs เป๊ะ) -->
     <div class="bottom-fixed">
     <div class="pay-block">
-      {{#if payment}}
-      <div>การชำระเงินสมบูรณ์แล้ว&nbsp;&nbsp;ชำระโดย <strong>{{payment.method}}</strong></div>
-      <div class="pay-row">
-        {{#if payment.is_cheque}}
-        <span>ธนาคาร</span><span class="pay-value">{{#if payment.bank_name}}{{payment.bank_name}}{{else}}-{{/if}}</span>
-        <span>เลขที่</span><span class="pay-value">{{#if payment.cheque_no}}{{payment.cheque_no}}{{else}}-{{/if}}</span>
-        <span>วันที่</span><span class="pay-value">{{#if payment.cheque_date}}{{payment.cheque_date}}{{else}}-{{/if}}</span>
-        {{else}}
-        <span>วันที่รับชำระ</span><span class="pay-value">{{#if payment.date}}{{payment.date}}{{else}}-{{/if}}</span>
-        {{/if}}
-        <span>จำนวนเงิน</span><span class="pay-value">{{money payment.amount}} บาท</span>
+      <div class="pay-title">รายละเอียดการชำระเงิน</div>
+      <div class="pay-method-row">
+        <span class="pay-label">ช่องทางการชำระเงิน:</span>
+        <span class="chk-item"><span class="chk-box{{#if payment.is_cash}} checked{{/if}}"></span>เงินสด</span>
+        <span class="chk-item"><span class="chk-box{{#if payment.is_cheque}} checked{{/if}}"></span>เช็ค</span>
+        <span class="chk-item"><span class="chk-box{{#if payment.is_transfer}} checked{{/if}}"></span>โอนเงิน</span>
+        <span class="chk-item"><span class="chk-box{{#if payment.is_credit_card}} checked{{/if}}"></span>บัตรเครดิต</span>
       </div>
-      {{else}}
-      <div>การชำระเงินจะสมบูรณ์เมื่อบริษัทได้รับเงินเรียบร้อยแล้ว&nbsp;&nbsp;เงินสด / เช็ค / โอนเงิน / บัตรเครดิต</div>
       <div class="pay-row">
-        <span>ธนาคาร</span><span class="pay-line sm"></span>
-        <span>เลขที่</span><span class="pay-line sm"></span>
-        <span>วันที่</span><span class="pay-line sm"></span>
-        <span>จำนวนเงิน</span><span class="pay-line sm"></span>
+        <span class="pay-field"><span class="pay-label">ธนาคาร</span><span class="pay-value">{{#if payment}}{{#unless payment.is_cash}}{{payment.bank_name}}{{/unless}}{{/if}}</span></span>
+        <span class="pay-field"><span class="pay-label">เลขที่</span><span class="pay-value">{{#if payment}}{{#unless payment.is_cash}}{{payment.cheque_no}}{{/unless}}{{/if}}</span></span>
+        <span class="pay-field"><span class="pay-label">วันที่ชำระ</span><span class="pay-value">{{#if payment}}{{payment.date}}{{/if}}</span></span>
       </div>
-      {{/if}}
+      <div class="pay-row">
+        <span class="pay-field"><span class="pay-label">ยอดชำระ</span><span class="pay-value">{{#if payment}}{{money payment.amount}} บาท{{/if}}</span></span>
+        <span class="pay-field"><span class="pay-label">หัก ณ ที่จ่าย</span><span class="pay-value">{{#if payment}}{{money payment.withholding_amount}} บาท{{/if}}</span></span>
+      </div>
     </div>
 
     <div class="sign-row">
       <div class="sign-col">
-        <div class="sign-name">&nbsp;</div>
-        <div class="sign-line"></div>
         <div class="sign-label">ผู้รับเงิน</div>
-        <div class="sign-date-row"><span class="sign-date-label">วันที่</span><span class="sign-date-line">&nbsp;</span></div>
-      </div>
-
-      <div class="sign-col">
         <div class="sign-name">&nbsp;</div>
         <div class="sign-line"></div>
-        <div class="sign-label">ผู้จัดทำ</div>
-        <div class="sign-date-row"><span class="sign-date-label">วันที่</span><span class="sign-date-line">&nbsp;</span></div>
+        <div class="sign-name-row">(<span class="sign-name-line">&nbsp;</span>)</div>
+        <div class="sign-date-row"><span class="sign-date-label">วันที่:</span></div>
       </div>
 
       <div class="sign-col">
+        <div class="sign-label">ผู้จัดทำ</div>
+        <div class="sign-name">&nbsp;</div>
+        <div class="sign-line"></div>
+        <div class="sign-name-row">(<span class="sign-name-line">&nbsp;</span>)</div>
+        <div class="sign-date-row"><span class="sign-date-label">วันที่:</span></div>
+      </div>
+
+      <div class="sign-col">
+        <div class="sign-label">ผู้อนุมัติ</div>
         <div class="sign-name">
           &nbsp;
           {{#if doc.signature_image_url}}
@@ -376,8 +400,8 @@
           {{/if}}
         </div>
         <div class="sign-line"></div>
-        <div class="sign-label">ผู้อนุมัติ</div>
-        <div class="sign-date-row"><span class="sign-date-label">วันที่</span><span class="sign-date-line">&nbsp;</span></div>
+        <div class="sign-name-row">(<span class="sign-name-line">&nbsp;</span>)</div>
+        <div class="sign-date-row"><span class="sign-date-label">วันที่:</span></div>
       </div>
     </div>
     </div><!-- /bottom-fixed -->
