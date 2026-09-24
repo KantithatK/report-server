@@ -1505,6 +1505,8 @@ function normalizeExpenseBillPayload(payload) {
     price: Number((it?.price ?? it?.unit_price) || 0),
     discount_display: it?.discount_display || "-",
     tax_display: it?.tax_display || "-",
+    // หัก ณ ที่จ่ายรายบรรทัด (แสดงเฉพาะเอกสารที่ตั้งภาษีแยกรายการ — summary.line_tax)
+    wht_display: it?.wht_display || "-",
     line_total: round2(it?.line_total ?? it?.amount ?? (Number(it?.qty || 0) * Number((it?.price ?? it?.unit_price) || 0))),
   }));
 
@@ -1529,9 +1531,13 @@ function normalizeExpenseBillPayload(payload) {
   );
   // vat_rate — อัตราภาษีจริงที่ระบบ TPR เลือกใช้ (มาสเตอร์ tpr_vat_rates); ไม่มีอัตราตายตัวอีกต่อไป fallback 7 ไว้เผื่อ payload เก่าที่ยังไม่ส่งค่านี้มา
   const vat_rate = isTaxable ? round2(parseNumberLoose(payload?.summary?.vat_rate) || 7) : 0;
-  const vat_rate_display = isTaxable && vat_rate > 0
-    ? vat_rate.toLocaleString("th-TH", { maximumFractionDigits: 2 })
-    : "";
+  // ใบค่าใช้จ่ายที่ตั้งภาษีแยกรายการ อาจมีหลายอัตรา — frontend ส่ง vat_rate_display = "" มา → ใช้ค่าจาก frontend ถ้ามีส่งมา
+  const vat_rate_display = typeof payload?.summary?.vat_rate_display === "string"
+    ? (isTaxable ? payload.summary.vat_rate_display : "")
+    : (isTaxable && vat_rate > 0 ? vat_rate.toLocaleString("th-TH", { maximumFractionDigits: 2 }) : "");
+  const line_tax = !!payload?.summary?.line_tax;
+  const wht_label = typeof payload?.summary?.wht_label === "string" ? payload.summary.wht_label : "";
+  const discount_label = typeof payload?.summary?.discount_label === "string" ? payload.summary.discount_label : "";
 
   const wht_enabled = !!payload?.summary?.wht_enabled;
   const wht_percent = round2(parseNumberLoose(payload?.summary?.wht_percent));
@@ -1601,6 +1607,9 @@ function normalizeExpenseBillPayload(payload) {
       wht_amount,
       net_payable,
       total_text,
+      line_tax,
+      wht_label,
+      discount_label,
     },
   };
 }

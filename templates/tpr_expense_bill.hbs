@@ -99,6 +99,7 @@
     .col-price { width: 92px; }
     .col-discount { width: 64px; }
     .col-tax { width: 50px; }
+    .col-wht { width: 64px; }
     .col-amount { width: 98px; }
 
     .center { text-align: center; }
@@ -255,6 +256,7 @@
         <col class="col-price" />
         <col class="col-discount" />
         <col class="col-tax" />
+        {{#if summary.line_tax}}<col class="col-wht" />{{/if}}
         <col class="col-amount" />
       </colgroup>
       <thead>
@@ -266,6 +268,7 @@
           <th class="col-price">ราคาต่อหน่วย</th>
           <th class="col-discount">ส่วนลด</th>
           <th class="col-tax">ภาษี</th>
+          {{#if summary.line_tax}}<th class="col-wht">หัก ณ ที่จ่าย</th>{{/if}}
           <th class="col-amount">มูลค่า</th>
         </tr>
       </thead>
@@ -284,46 +287,47 @@
           <td class="right">{{money price}}</td>
           <td class="right">{{discount_display}}</td>
           <td class="center">{{tax_display}}</td>
+          {{#if ../summary.line_tax}}<td class="center">{{wht_display}}</td>{{/if}}
           <td class="right">{{money line_total}}</td>
         </tr>
         {{/each}}
 
         <tr class="summary-start">
-          <td colspan="5" class="no-border-right"></td>
+          <td colspan="{{#if summary.line_tax}}6{{else}}5{{/if}}" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">รวมเป็นเงิน</td>
           <td class="summary-value">{{money summary.gross_subtotal}} บาท</td>
         </tr>
         {{#if summary.discount_total}}
         <tr>
-          <td colspan="5" class="no-border"></td>
-          <td colspan="2" class="summary-label no-border-left">ส่วนลดรวม</td>
+          <td colspan="{{#if summary.line_tax}}6{{else}}5{{/if}}" class="no-border"></td>
+          <td colspan="2" class="summary-label no-border-left">{{#if summary.discount_label}}{{summary.discount_label}}{{else}}ส่วนลดรวม{{/if}}</td>
           <td class="summary-value">-{{money summary.discount_total}} บาท</td>
         </tr>
         <tr>
-          <td colspan="5" class="no-border"></td>
+          <td colspan="{{#if summary.line_tax}}6{{else}}5{{/if}}" class="no-border"></td>
           <td colspan="2" class="summary-label no-border-left">ราคาหลังหักส่วนลด</td>
           <td class="summary-value">{{money summary.after_discount}} บาท</td>
         </tr>
         {{/if}}
         <tr>
-          <td colspan="5" class="no-border-right"></td>
+          <td colspan="{{#if summary.line_tax}}6{{else}}5{{/if}}" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">มูลค่าที่ไม่มี/ยกเว้นภาษี</td>
           <td class="summary-value">{{money summary.exempt_amount}} บาท</td>
         </tr>
         <tr>
-          <td colspan="5" class="no-border-right"></td>
+          <td colspan="{{#if summary.line_tax}}6{{else}}5{{/if}}" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">มูลค่าที่คำนวณภาษี</td>
           <td class="summary-value">{{money summary.taxable_amount}} บาท</td>
         </tr>
         {{#if summary.vat_enabled}}
         <tr>
-          <td colspan="5" class="no-border-right"></td>
+          <td colspan="{{#if summary.line_tax}}6{{else}}5{{/if}}" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">ภาษีมูลค่าเพิ่ม{{#if summary.vat_rate_display}} {{summary.vat_rate_display}}%{{/if}}</td>
           <td class="summary-value">{{money summary.vat}} บาท</td>
         </tr>
         {{/if}}
         <tr class="{{#unless summary.wht_enabled}}last-summary{{/unless}}">
-          <td colspan="5" class="no-border-right amount-words-cell">
+          <td colspan="{{#if summary.line_tax}}6{{else}}5{{/if}}" class="no-border-right amount-words-cell">
             ({{#if summary.total_text}}{{summary.total_text}}{{else}}-{{/if}})
           </td>
           <td colspan="2" class="summary-label no-border-left">จำนวนเงินรวมทั้งสิ้น</td>
@@ -331,12 +335,12 @@
         </tr>
         {{#if summary.wht_enabled}}
         <tr class="wht-divider">
-          <td colspan="5" class="no-border-right"></td>
-          <td colspan="2" class="summary-label no-border-left">หักภาษี ณ ที่จ่าย{{#if summary.wht_percent}} {{summary.wht_percent}}%{{/if}}</td>
+          <td colspan="{{#if summary.line_tax}}6{{else}}5{{/if}}" class="no-border-right"></td>
+          <td colspan="2" class="summary-label no-border-left">{{#if summary.wht_label}}{{summary.wht_label}}{{else}}หักภาษี ณ ที่จ่าย{{#if summary.wht_percent}} {{summary.wht_percent}}%{{/if}}{{/if}}</td>
           <td class="summary-value">{{money summary.wht_amount}} บาท</td>
         </tr>
         <tr class="last-summary">
-          <td colspan="5" class="no-border-right"></td>
+          <td colspan="{{#if summary.line_tax}}6{{else}}5{{/if}}" class="no-border-right"></td>
           <td colspan="2" class="summary-label no-border-left">ยอดชำระ</td>
           <td class="summary-value">{{money summary.net_payable}} บาท</td>
         </tr>
