@@ -18,7 +18,7 @@
       line-height: 1.16;
     }
     .page { width: 100%; min-height: 270mm; position: relative; }
-    .page-content { padding-bottom: 118px; }
+    .page-content { padding-bottom: 200px; }
 
     .doc-title { text-align: left; font-size: 26px; font-weight: 800; margin: 0 0 22px; }
     .header-row {
@@ -116,11 +116,49 @@
     .note-title { font-weight: 800; }
     .note-text { white-space: pre-line; margin-top: 2px; }
 
-    .sign-row {
+    /* กล่องชำระเงิน + ลายเซ็น ติดล่างสุดของหน้าด้วยกัน (mirror tpr_expense_bill.hbs) */
+    .bottom-fixed {
       position: fixed;
       bottom: 18mm;
       left: 0;
       right: 0;
+    }
+    /* ===== Payment confirmation — เหมือนใบค่าใช้จ่าย (จ่ายเงินให้ผู้จำหน่าย) ===== */
+    .pay-block { margin-top: 12px; font-size: 16px; width: 100%; }
+    .pay-title { font-weight: 800; text-align: left; margin-bottom: 6px; }
+    .pay-method-row { display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 18px; margin-bottom: 10px; }
+    .chk-item { display: inline-flex; align-items: center; gap: 5px; }
+    .chk-box {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 13px;
+      height: 13px;
+      border: 1.4px solid #333;
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+    .chk-box.checked::after {
+      content: '\2713';
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      transform: translateY(3px);
+    }
+    .pay-row { display: flex; align-items: flex-end; width: 100%; gap: 14px; margin-top: 10px; }
+    .pay-field { display: flex; align-items: flex-end; flex: 1; gap: 4px; white-space: nowrap; }
+    .pay-field .pay-label { flex-shrink: 0; }
+    .pay-value {
+      flex: 1;
+      border-bottom: 1px dotted #333;
+      min-height: 15px;
+      padding: 0 4px 1px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .sign-row {
+      margin-top: 22px;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 132px;
@@ -317,7 +355,28 @@
 
   </div><!-- /page-content -->
 
-    <!-- Signatures: fixed ด้านล่างสุดของหน้า -->
+    <!-- การชำระเงิน + Signatures: fixed ติดกันด้านล่างสุดของหน้า (mirror tpr_expense_bill.hbs) -->
+    <div class="bottom-fixed">
+    <div class="pay-block">
+      <div class="pay-title">รายละเอียดการชำระเงิน</div>
+      <div class="pay-method-row">
+        <span class="pay-label">ช่องทางการชำระเงิน:</span>
+        <span class="chk-item"><span class="chk-box{{#if payment.is_cash}} checked{{/if}}"></span>เงินสด</span>
+        <span class="chk-item"><span class="chk-box{{#if payment.is_cheque}} checked{{/if}}"></span>เช็ค</span>
+        <span class="chk-item"><span class="chk-box{{#if payment.is_transfer}} checked{{/if}}"></span>โอนเงิน</span>
+        <span class="chk-item"><span class="chk-box{{#if payment.is_credit_card}} checked{{/if}}"></span>บัตรเครดิต</span>
+      </div>
+      <div class="pay-row">
+        <span class="pay-field"><span class="pay-label">ธนาคาร</span><span class="pay-value">{{#if payment}}{{#unless payment.is_cash}}{{payment.bank_name}}{{/unless}}{{/if}}</span></span>
+        <span class="pay-field"><span class="pay-label">เลขที่</span><span class="pay-value">{{#if payment}}{{#unless payment.is_cash}}{{payment.cheque_no}}{{/unless}}{{/if}}</span></span>
+        <span class="pay-field"><span class="pay-label">วันที่ชำระ</span><span class="pay-value">{{#if payment}}{{payment.date}}{{/if}}</span></span>
+      </div>
+      <div class="pay-row">
+        <span class="pay-field"><span class="pay-label">ยอดชำระ</span><span class="pay-value">{{#if payment}}{{money payment.amount}} บาท{{/if}}</span></span>
+        <span class="pay-field"><span class="pay-label">หัก ณ ที่จ่าย</span><span class="pay-value">{{#if payment}}{{money payment.withholding_amount}} บาท{{/if}}</span></span>
+      </div>
+    </div>
+
     <div class="sign-row">
       <div class="sign-col">
         <div class="sign-company">ในนาม {{vendor.name}}</div>
@@ -355,6 +414,7 @@
         </div>
       </div>
     </div>
+    </div><!-- /bottom-fixed -->
 
   </div><!-- /page -->
 </body>

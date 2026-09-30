@@ -1449,6 +1449,22 @@ function normalizeGoodsReceiptPayload(payload) {
     : 0;
   const net_total = round2(parseNumberLoose(payload?.summary?.net_total) || (total - withholding));
 
+  // กล่อง "รายละเอียดการชำระเงิน" — mirror normalizeExpenseBillPayload (จ่ายเงินให้ผู้จำหน่ายเหมือนกัน)
+  const paymentRaw = payload?.payment || null;
+  const payment = paymentRaw ? {
+    method:             paymentRaw.method || "",
+    is_cash:            !!paymentRaw.is_cash,
+    is_cheque:          !!paymentRaw.is_cheque,
+    is_transfer:        !!paymentRaw.is_transfer,
+    is_credit_card:     !!paymentRaw.is_credit_card,
+    date:               paymentRaw.date || "",
+    amount:             round2(paymentRaw.amount || 0),
+    withholding_amount: round2(paymentRaw.withholding_amount || 0),
+    bank_name:          paymentRaw.bank_name || "",
+    cheque_no:          paymentRaw.cheque_no || "",
+    cheque_date:        paymentRaw.cheque_date || "",
+  } : null;
+
   return {
     css_inline: cssInline,
     company: normalizeCompany(payload),
@@ -1468,6 +1484,7 @@ function normalizeGoodsReceiptPayload(payload) {
     },
     vendor: normalizeVendor(payload),
     items,
+    payment,
     notes: {
       title: payload?.notes?.title || payload?.note_title || payload?.noteTitle || "หมายเหตุ :",
       text: payload?.notes?.text || payload?.notes || payload?.note || payload?.remark || "",
